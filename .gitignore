@@ -1,5 +1,7 @@
 /*
-!app-decorators-cli.go
+!appdec.go
 !.gitignore
 !README.md
 !package.json
+!bootstrap
+!command
