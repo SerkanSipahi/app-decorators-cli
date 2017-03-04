@@ -1,0 +1,14 @@
+{
+  "name": "app-decorators-cli",
+  "version": "0.8.204",
+  "description": "appdec - cli for app-decorators",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SerkanSipahi/app-decortors-cli.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Serkan Sipahi <serkan.sipahi@yahoo.de>",
+  "license": "MIT"
+}
