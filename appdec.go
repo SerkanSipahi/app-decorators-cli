@@ -56,26 +56,6 @@ func jsonStringify(value interface{}) ([]byte, error){
 	return data, nil
 }
 
-func cd(dir string) error {
-	return os.Chdir(dir)
-}
-
-func rm(path string) error {
-	return os.Remove(path)
-}
-
-func mkdir(dir string) error {
-	return os.Mkdir(dir, 0755)
-}
-
-func rmdir(dir string) error {
-	return os.RemoveAll(dir)
-}
-
-func pwd() (string, error) {
-	return os.Getwd()
-}
-
 func initialize() (int, error) {
 
 	fmt.Println("Run: initialize...")
@@ -106,14 +86,14 @@ func install(name string, debugCommand bool, force bool) (int, error) {
 		cliPackagePath      string
 	)
 
-	currentAbsolutePath, err = pwd()
+	currentAbsolutePath, err = os.Getwd()
 	appPath = currentAbsolutePath + "/" + name
 	cliPackagePath = currentAbsolutePath + "/" + cliName + ".json"
 
 	/**
 	 * Der soll die appdec.json prüfen
 	 */
-	if err = cd(appPath); err == nil && force == false {
+	if err = os.Chdir(appPath); err == nil && force == false {
 		err = errors.New(fmt.Sprintf("\n"+
 			"Run: '%s' already created\n" +
 			"Please use --force for new init\n" +
@@ -122,15 +102,21 @@ func install(name string, debugCommand bool, force bool) (int, error) {
 		return -1, err
 	}
 
-	if err = rmdir(appPath); err != nil {
+	if err = os.RemoveAll(appPath); err != nil {
 		return 1, err
 	}
 
-	if err = cd(appPath); err != nil {
-		if err = mkdir(appPath); err != nil {
+	/**
+	 * 1.) Wenn appdec.json existiert
+	 * 2.) Name auslesen
+	 * 3.) Name{ordner}, und appdec.json löschen
+	 */
+
+	if err = os.Chdir(appPath); err != nil {
+		if err = os.Mkdir(appPath, 0755); err != nil {
 			return -1, err
 		}
-		if err = cd(appPath); err != nil {
+		if err = os.Chdir(appPath); err != nil {
 			return -1, err
 		}
 	}
@@ -156,7 +142,7 @@ func install(name string, debugCommand bool, force bool) (int, error) {
 		return -1, err
 	}
 
-	if err = rm(appPath + "/package.json"); err != nil {
+	if err = os.Remove(appPath + "/package.json"); err != nil {
 		return -1, err
 	}
 
