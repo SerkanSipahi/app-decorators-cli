@@ -60,6 +60,10 @@ func cd(dir string) error {
 	return os.Chdir(dir)
 }
 
+func rm(path string) error {
+	return os.Remove(path)
+}
+
 func mkdir(dir string) error {
 	return os.Mkdir(dir, 0755)
 }
@@ -96,16 +100,25 @@ func initialize() (int, error) {
 func install(name string, debugCommand bool, force bool) (int, error) {
 
 	var (
-		err error
-		appPath string
-		absolutePath string
+		err                 error
+		appPath             string
+		currentAbsolutePath string
+		cliPackagePath      string
 	)
 
-	absolutePath, err = pwd()
-	appPath = absolutePath + "/" + name
+	currentAbsolutePath, err = pwd()
+	appPath = currentAbsolutePath + "/" + name
+	cliPackagePath = currentAbsolutePath + "/" + cliName + ".json"
 
+	/**
+	 * Der soll die appdec.json prüfen
+	 */
 	if err = cd(appPath); err == nil && force == false {
-		err = errors.New("Run: " + name + " already created! Please use --force for new init")
+		err = errors.New(fmt.Sprintf("\n"+
+			"Run: '%s' already created\n" +
+			"Please use --force for new init\n" +
+			"Note: this command will delete all your files in %s\n"+
+		"", name, name))
 		return -1, err
 	}
 
@@ -139,8 +152,11 @@ func install(name string, debugCommand bool, force bool) (int, error) {
 	}
 
 	fmt.Println("Run: create appdec.json...")
-	cliPackagePath := absolutePath + "/" + cliName + ".json"
 	if err = ioutil.WriteFile(cliPackagePath, jsonData, 0755); err != nil {
+		return -1, err
+	}
+
+	if err = rm(appPath + "/package.json"); err != nil {
 		return -1, err
 	}
 
@@ -222,9 +238,7 @@ func main() {
 				},
 			},
 			Action : func(c *cli.Context) error {
-
 				fmt.Println("completed task: ", c.Args().First())
-
 				return nil
 			},
 		},
@@ -239,14 +253,28 @@ func main() {
 					Usage: "will show debug messages",
 				},
 				cli.BoolFlag {
-					Name: "live",
+					Name: "production",
+					Usage: "production command",
+				},
+			},
+			Action : func(c *cli.Context) error {
+				fmt.Println("completed task: ", c.Args().First())
+				return nil
+			},
+		},
+		{
+			Name     : "delete",
+			Aliases  : []string{"d"},
+			Usage    : "delete module",
+			UsageText: "delete usage text",
+			Flags    : []cli.Flag {
+				cli.BoolFlag {
+					Name: "force",
 					Usage: "force command",
 				},
 			},
 			Action : func(c *cli.Context) error {
-
 				fmt.Println("completed task: ", c.Args().First())
-
 				return nil
 			},
 		},
