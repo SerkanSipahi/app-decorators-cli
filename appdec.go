@@ -90,9 +90,6 @@ func install(name string, debugCommand bool, force bool) (int, error) {
 	appPath = currentAbsolutePath + "/" + name
 	cliPackagePath = currentAbsolutePath + "/" + cliName + ".json"
 
-	/**
-	 * Der soll die appdec.json prüfen
-	 */
 	if err = os.Chdir(appPath); err == nil && force == false {
 		err = errors.New(fmt.Sprintf("\n"+
 			"Run: '%s' already created\n" +
@@ -105,12 +102,6 @@ func install(name string, debugCommand bool, force bool) (int, error) {
 	if err = os.RemoveAll(appPath); err != nil {
 		return 1, err
 	}
-
-	/**
-	 * 1.) Wenn appdec.json existiert
-	 * 2.) Name auslesen
-	 * 3.) Name{ordner}, und appdec.json löschen
-	 */
 
 	if err = os.Chdir(appPath); err != nil {
 		if err = os.Mkdir(appPath, 0755); err != nil {
