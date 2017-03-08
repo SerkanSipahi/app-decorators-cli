@@ -82,7 +82,7 @@ func Install(appdecConfig config.Appdec, rootPath string, debugCommand bool, for
 	}
 
 	// json stringify
-	jsonData, err := osx.ToJsonString(appdecConfig)
+	jsonData, err := osx.FromStructToJson(appdecConfig)
 	if err != nil {
 		return -1, err
 	}

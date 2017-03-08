@@ -29,8 +29,8 @@ func Cmd(name string, arg string, option string, debug ...bool) exec.Cmd {
 	return cmd
 }
 
-func ToJsonString(appdec interface{})  ([]byte, error) {
-	return json.MarshalIndent(appdec, "", "\t")
+func FromStructToJson(config interface{}) ([]byte, error) {
+	return json.MarshalIndent(config, "", "\t")
 }
 
 func FromJsonFileToStruct(file string, s interface{}) interface{} {
