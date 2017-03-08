@@ -4,7 +4,6 @@ import (
 	"os"
 	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/osx"
-	"encoding/json"
 	"io/ioutil"
 	"errors"
 	"github.com/serkansipahi/app-decorators-cli/config"
