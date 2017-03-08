@@ -4,6 +4,8 @@ import (
 	"os/exec"
 	"os"
 	"errors"
+	"encoding/json"
+	"io/ioutil"
 )
 
 func Which(bin string) (string, error) {
@@ -25,4 +27,19 @@ func Cmd(name string, arg string, option string, debug ...bool) exec.Cmd {
 	}
 
 	return cmd
+}
+
+func ToJsonString(appdec interface{})  ([]byte, error) {
+	return json.MarshalIndent(appdec, "", "\t")
+}
+
+func FromJsonFileToStruct(file string, s interface{}) interface{} {
+
+	raw, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	json.Unmarshal(raw, &s)
+	return s
 }

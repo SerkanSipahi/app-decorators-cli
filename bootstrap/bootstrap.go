@@ -52,11 +52,12 @@ func Install(appdecConfig config.Appdec, rootPath string, debugCommand bool, for
 		return -1, err
 	}
 
-	/**
-	 * 1.) Wenn appdec.json existiert
-	 * 2.) Name auslesen
-	 * 3.) Name{ordner}, und appdec.json löschen
-	 */
+	// read file
+	appdecStruct := osx.FromJsonFileToStruct(cliPackagePath, config.Appdec{})
+	fmt.Println(appdecStruct)
+
+	// delete folder based on appdecStruct.name
+
 	if err = os.RemoveAll(appPath); err != nil {
 		return 1, err
 	}
@@ -82,12 +83,12 @@ func Install(appdecConfig config.Appdec, rootPath string, debugCommand bool, for
 	}
 
 	// json stringify
-	jsonData, err := json.MarshalIndent(appdecConfig, "", "\t")
+	jsonData, err := osx.ToJsonString(appdecConfig)
 	if err != nil {
 		return -1, err
 	}
 
-	fmt.Println("Run: create appdec.json...")
+	fmt.Println("Run: create "+ config.AppName + ".json...")
 	if err = ioutil.WriteFile(cliPackagePath, jsonData, 0755); err != nil {
 		return -1, err
 	}
