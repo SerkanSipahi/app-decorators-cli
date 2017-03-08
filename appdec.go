@@ -2,159 +2,28 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"github.com/urfave/cli"
-	"os/exec"
-	"errors"
-	"log"
-	"encoding/json"
-	"io/ioutil"
+	"github.com/serkansipahi/app-decorators-cli/bootstrap"
+	"github.com/serkansipahi/app-decorators-cli/config"
 )
-
-const (
-	cliName     = "appdec"
-	authorName  = "Serkan Sipahi"
-	authorEmail = "serkan.sipahi@yahoo.de"
-	appVersion  = "0.8.204"
-	npmPackage  = "app-decorators"
-)
-
-type Appdec struct {
-	Version string `json:"version"`
-	Name    string `json:"name"`
-}
-
-func which(bin string) (string, error) {
-
-	path, err := exec.LookPath(bin)
-	if err != nil {
-		err = errors.New("Please make sure you have '" + bin + "' installed")
-	}
-
-	return path, err
-}
-
-func command(name string, arg string, option string, debug ...bool) exec.Cmd {
-
-	cmd := *exec.Command(name, arg, option)
-	if debug[0] == true {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-
-	return cmd
-}
-
-func jsonStringify(value interface{}) ([]byte, error){
-
-	data, err := json.MarshalIndent(value, "", "\t")
-
-	if err != nil {
-		return data, err
-	}
-
-	return data, nil
-}
-
-func initialize() (int, error) {
-
-	fmt.Println("Run: initialize...")
-
-	var (
-		_ string
-		err error
-	)
-
-	_, err = which("git")
-	if err != nil {
-		return -1, err
-	}
-	_, err = which("npm")
-	if err != nil {
-		return -1, err
-	}
-
-	return 1, nil
-}
-
-func install(name string, debugCommand bool, force bool) (int, error) {
-
-	var (
-		err                 error
-		appPath             string
-		currentAbsolutePath string
-		cliPackagePath      string
-	)
-
-	currentAbsolutePath, err = os.Getwd()
-	appPath = currentAbsolutePath + "/" + name
-	cliPackagePath = currentAbsolutePath + "/" + cliName + ".json"
-
-	if err = os.Chdir(appPath); err == nil && force == false {
-		err = errors.New(fmt.Sprintf("\n"+
-			"Run: '%s' already created\n" +
-			"Please use --force for new init\n" +
-			"Note: this command will delete all your files in %s\n"+
-		"", name, name))
-		return -1, err
-	}
-
-	if err = os.RemoveAll(appPath); err != nil {
-		return 1, err
-	}
-
-	if err = os.Chdir(appPath); err != nil {
-		if err = os.Mkdir(appPath, 0755); err != nil {
-			return -1, err
-		}
-		if err = os.Chdir(appPath); err != nil {
-			return -1, err
-		}
-	}
-
-	fmt.Println("Run: install...")
-	cmdNpmInit := command("npm", "init", "-y", debugCommand)
-	if err = cmdNpmInit.Run(); err != nil {
-		return -1, err
-	}
-
-	cmdNpmInstall := command("npm", "install", npmPackage, debugCommand)
-	if err = cmdNpmInstall.Run(); err != nil {
-		return -1, err
-	}
-
-	jsonData, err := jsonStringify(Appdec{appVersion, name})
-	if err != nil {
-		return -1, err
-	}
-
-	fmt.Println("Run: create appdec.json...")
-	if err = ioutil.WriteFile(cliPackagePath, jsonData, 0755); err != nil {
-		return -1, err
-	}
-
-	if err = os.Remove(appPath + "/package.json"); err != nil {
-		return -1, err
-	}
-
-	return 1, nil
-}
 
 func main() {
 
-	_, err := initialize()
+	_, err := bootstrap.Initialize()
 	if err != nil {
 		log.Fatalln("Failed while initializing...", err)
 	}
 
 	app := cli.NewApp()
-	app.Name = cliName
-	app.Version = appVersion
-	app.Copyright = "(c) 2017 " + cliName
-	app.Authors = []cli.Author {
+	app.Name      = config.AppName
+	app.Version   = config.AppVersion
+	app.Copyright = "(c) 2017 " + config.AppName
+	app.Authors   = []cli.Author {
 		cli.Author {
-			Name:  authorName,
-			Email: authorEmail,
+			Name:  config.AuthorName,
+			Email: config.AuthorEmail,
 		},
 	}
 
@@ -179,15 +48,27 @@ func main() {
 				},
 				cli.BoolFlag {
 					Name: "force",
-					Usage: "force command",
+					Usage: "force Cmd",
 				},
 			},
-			Action : func(c *cli.Context) error {
+			Action: func(c *cli.Context) error {
 
-				_, err = install(
-					c.String("name"),
-					c.Bool("debug"),
-					c.Bool("force"),
+				rootPath, err := os.Getwd()
+				if err != nil {
+					log.Fatalln("Failed whilte get root path")
+				}
+
+				name  := c.String("name")
+				debug := c.Bool("debug")
+				force := c.Bool("force")
+
+				_, err = bootstrap.Install(
+					config.Appdec {
+						name,
+						config.AppVersion,
+						rootPath,
+					},
+					debug, force,
 				)
 				if err != nil {
 					log.Fatalln("Failed while installing...", err)
@@ -211,7 +92,7 @@ func main() {
 				},
 				cli.BoolFlag {
 					Name: "live",
-					Usage: "force command",
+					Usage: "force Cmd",
 				},
 			},
 			Action : func(c *cli.Context) error {
@@ -231,7 +112,7 @@ func main() {
 				},
 				cli.BoolFlag {
 					Name: "production",
-					Usage: "production command",
+					Usage: "production Cmd",
 				},
 			},
 			Action : func(c *cli.Context) error {
@@ -247,7 +128,7 @@ func main() {
 			Flags    : []cli.Flag {
 				cli.BoolFlag {
 					Name: "force",
-					Usage: "force command",
+					Usage: "force Cmd",
 				},
 			},
 			Action : func(c *cli.Context) error {
