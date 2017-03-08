@@ -31,12 +31,11 @@ func Initialize() (int, error) {
 	return 1, nil
 }
 
-func Install(appdecConfig config.Appdec, debugCommand bool, force bool) (int, error) {
+func Install(appdecConfig config.Appdec, rootPath string, debugCommand bool, force bool) (int, error) {
 
 	var (
 		err            error
 		name           string = appdecConfig.Name
-		rootPath       string = appdecConfig.RootPath
 		appPath        string = rootPath + "/" + name
 		cliPackagePath string = rootPath + "/" + config.AppName + ".json"
 	)

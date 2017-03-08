@@ -66,9 +66,10 @@ func main() {
 					config.Appdec {
 						name,
 						config.AppVersion,
-						rootPath,
 					},
-					debug, force,
+					rootPath,
+					debug,
+					force,
 				)
 				if err != nil {
 					log.Fatalln("Failed while installing...", err)

@@ -3,7 +3,6 @@ package config
 type Appdec struct {
 	Name     string `json:"name"`
 	Version  string `json:"version"`
-	RootPath string `json:"root_path"`
 }
 
 const (
