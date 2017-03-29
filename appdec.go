@@ -16,7 +16,7 @@ const (
 	CLI_NAME     = "appdec"
 	AUTHOR_NAME  = "Serkan Sipahi"
 	AUTHOR_EMAIL = "serkan.sipahi@yahoo.de"
-	APP_VERSION  = "0.8.204"
+	APP_VERSION  = "0.8.206"
 	COPYRIGHT    = "(c) 2017"
 )
 
@@ -30,7 +30,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name      = CLI_NAME
 	app.Version   = APP_VERSION
-	app.Copyright = COPYRIGHT + "" + CLI_NAME
+	app.Copyright = COPYRIGHT + " " + CLI_NAME
 	app.Authors   = []cli.Author {
 		cli.Author {
 			Name:  AUTHOR_NAME,
@@ -81,8 +81,6 @@ func main() {
 				if err != nil {
 					log.Fatalln("Failed while installing...", err)
 				}
-
-				fmt.Println("Run: done!")
 
 				return nil
 			},

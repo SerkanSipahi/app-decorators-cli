@@ -1,8 +1,3 @@
-/*
-!appdec.go
-!.gitignore
-!README.md
-!package.json
-!bootstrap
-!config
-!osx
+collapsible
+appdec
+.idea/
