@@ -5,25 +5,36 @@ import (
 	"log"
 	"os"
 	"github.com/urfave/cli"
-	"github.com/serkansipahi/app-decorators-cli/bootstrap"
-	"github.com/serkansipahi/app-decorators-cli/config"
+)
+
+type Appdec struct {
+	Name     string `json:"name"`
+	Version  string `json:"version"`
+}
+
+const (
+	CLI_NAME     = "appdec"
+	AUTHOR_NAME  = "Serkan Sipahi"
+	AUTHOR_EMAIL = "serkan.sipahi@yahoo.de"
+	APP_VERSION  = "0.8.204"
+	COPYRIGHT    = "(c) 2017"
 )
 
 func main() {
 
-	_, err := bootstrap.Initialize()
+	_, err := Init()
 	if err != nil {
 		log.Fatalln("Failed while initializing...", err)
 	}
 
 	app := cli.NewApp()
-	app.Name      = config.AppName
-	app.Version   = config.AppVersion
-	app.Copyright = "(c) 2017 " + config.AppName
+	app.Name      = CLI_NAME
+	app.Version   = APP_VERSION
+	app.Copyright = COPYRIGHT + "" + CLI_NAME
 	app.Authors   = []cli.Author {
 		cli.Author {
-			Name:  config.AuthorName,
-			Email: config.AuthorEmail,
+			Name:  AUTHOR_NAME,
+			Email: AUTHOR_EMAIL,
 		},
 	}
 
@@ -39,16 +50,12 @@ func main() {
 			Flags    : []cli.Flag {
 				cli.StringFlag {
 					Name: "name",
-					Value: "app",
+					Value: "",
 					Usage: "set name of the app",
 				},
 				cli.BoolFlag {
 					Name: "debug",
 					Usage: "will show debug messages",
-				},
-				cli.BoolFlag {
-					Name: "force",
-					Usage: "force Cmd",
 				},
 			},
 			Action: func(c *cli.Context) error {
@@ -58,18 +65,18 @@ func main() {
 					log.Fatalln("Failed whilte get root path")
 				}
 
-				name  := c.String("name")
-				debug := c.Bool("debug")
-				force := c.Bool("force")
+				name   := c.String("name")
+				debug  := c.Bool("debug")
+				appdec := Appdec{
+					name,
+					APP_VERSION,
+				}
 
-				_, err = bootstrap.Install(
-					config.Appdec {
-						name,
-						config.AppVersion,
-					},
+				_, err = Install(
+					appdec,
 					rootPath,
+					CLI_NAME,
 					debug,
-					force,
 				)
 				if err != nil {
 					log.Fatalln("Failed while installing...", err)
