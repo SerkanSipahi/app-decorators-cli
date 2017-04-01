@@ -28,7 +28,7 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	if err = os.Chdir(appPath); err == nil {
 		err = errors.New(fmt.Sprintf("\n"+
 			"Run: '%s' already created\n" +
-			"You can delete it with 'appdec delete --name=%s\n'" +
+			"You can delete it with 'appdec delete --name=%s\n" +
 			"", name, name))
 
 		return -1, err
