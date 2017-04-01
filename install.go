@@ -7,7 +7,7 @@ import (
 	"github.com/serkansipahi/app-decorators-cli/osx"
 	"io/ioutil"
 	"encoding/json"
-	"io"
+	"path/filepath"
 )
 
 func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand bool) (int, error) {
@@ -74,6 +74,27 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	fmt.Println("Run: create "+ cliName + ".json...")
 	if err = ioutil.WriteFile(appPath + "/" + cliName + ".json", jsonData, 0755); err != nil {
 		return -1, err
+	}
+
+	/**
+	 * Copy core files
+	 */
+
+	fmt.Println("Run: create core files...")
+
+	appDecoratorPath := filepath.Clean(
+		filepath.Join(rootPath, appdecConfig.Name, "node_modules/app-decorators"),
+	)
+	files, _ := osx.ReadFiles(appDecoratorPath)
+	for _, file := range files {
+
+		src  := filepath.Join(appDecoratorPath, file.Name())
+		dist := filepath.Join(rootPath, appdecConfig.Name, file.Name())
+
+		err  := osx.CopyFile(src, dist)
+		if err != nil {
+			return -1, err
+		}
 	}
 
 	/**
