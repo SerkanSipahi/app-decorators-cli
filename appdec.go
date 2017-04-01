@@ -27,6 +27,11 @@ func main() {
 		log.Fatalln("Failed while initializing...", err)
 	}
 
+	rootPath, err := os.Getwd()
+	if err != nil {
+		log.Fatalln("Failed whilte get root path")
+	}
+
 	app := cli.NewApp()
 	app.Name      = CLI_NAME
 	app.Version   = APP_VERSION
@@ -60,11 +65,6 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 
-				rootPath, err := os.Getwd()
-				if err != nil {
-					log.Fatalln("Failed whilte get root path")
-				}
-
 				name   := c.String("name")
 				debug  := c.Bool("debug")
 				appdec := Appdec{
@@ -85,6 +85,29 @@ func main() {
 				return nil
 			},
 
+		},
+		{
+			Name     : "delete",
+			Aliases  : []string{"d"},
+			Usage    : "delete module",
+			UsageText: "delete usage text",
+			Flags    : []cli.Flag {
+				cli.StringFlag {
+					Name: "name",
+					Value: "",
+					Usage: "set name of the app",
+				},
+			},
+			Action : func(c *cli.Context) error {
+
+				name := c.String("name")
+				_, err := Delete(name, rootPath, CLI_NAME)
+				if err != nil {
+					log.Fatalln("Failed while deleting...", err)
+				}
+
+				return nil
+			},
 		},
 		{
 			Name     : "server",
@@ -119,22 +142,6 @@ func main() {
 				cli.BoolFlag {
 					Name: "production",
 					Usage: "production Cmd",
-				},
-			},
-			Action : func(c *cli.Context) error {
-				fmt.Println("completed task: ", c.Args().First())
-				return nil
-			},
-		},
-		{
-			Name     : "delete",
-			Aliases  : []string{"d"},
-			Usage    : "delete module",
-			UsageText: "delete usage text",
-			Flags    : []cli.Flag {
-				cli.BoolFlag {
-					Name: "force",
-					Usage: "force Cmd",
 				},
 			},
 			Action : func(c *cli.Context) error {
