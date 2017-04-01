@@ -1,12 +1,12 @@
 package main
 
 import (
-	"os"
-	"fmt"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/osx"
 	"io/ioutil"
-	"encoding/json"
+	"os"
 	"path/filepath"
 )
 
@@ -31,8 +31,8 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	 */
 	if err = os.Chdir(appPath); err == nil {
 		err = errors.New(fmt.Sprintf("\n"+
-			"Run: '%s' already created\n" +
-			"You can delete it with 'appdec delete --name=%s\n" +
+			"Run: '%s' already created\n"+
+			"You can delete it with 'appdec delete --name=%s\n"+
 			"", name, name))
 
 		return -1, err
@@ -62,7 +62,7 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	/*
 	 * Install app-decorators via npm
 	 */
-	cmdNpmInstall := osx.Cmd("npm", "install", "app-decorators@" + appdecConfig.Version, debugCommand)
+	cmdNpmInstall := osx.Cmd("npm", "install", "app-decorators@"+appdecConfig.Version, debugCommand)
 	if err = cmdNpmInstall.Run(); err != nil {
 		return -1, err
 	}
@@ -75,8 +75,8 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 		return -1, err
 	}
 
-	fmt.Println("Run: create "+ cliName + ".json...")
-	if err = ioutil.WriteFile(appPath + "/" + cliName + ".json", jsonData, 0755); err != nil {
+	fmt.Println("Run: create " + cliName + ".json...")
+	if err = ioutil.WriteFile(appPath+"/"+cliName+".json", jsonData, 0755); err != nil {
 		return -1, err
 	}
 
@@ -92,10 +92,10 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	files, _ := osx.ReadFiles(appDecoratorPath)
 	for _, file := range files {
 
-		src  := filepath.Join(appDecoratorPath, file.Name())
+		src := filepath.Join(appDecoratorPath, file.Name())
 		dist := filepath.Join(rootPath, appdecConfig.Name, file.Name())
 
-		err  := osx.CopyFile(src, dist)
+		err := osx.CopyFile(src, dist)
 		if err != nil {
 			return -1, err
 		}

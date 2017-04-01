@@ -10,7 +10,7 @@ func Init() (int, error) {
 	fmt.Println("Run: initialize...")
 
 	var (
-		_ string
+		_   string
 		err error
 	)
 
@@ -25,4 +25,3 @@ func Init() (int, error) {
 
 	return 1, nil
 }
-

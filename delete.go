@@ -1,17 +1,17 @@
 package main
 
 import (
-	"path/filepath"
-	"os"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 )
 
 func Delete(module string, rootPath string, cliName string) (int, error) {
 
 	// module json exists
 	moduleJsonFilePath := filepath.Clean(
-		filepath.Join(rootPath, module, cliName + ".json"),
+		filepath.Join(rootPath, module, cliName+".json"),
 	)
 	moduleFile, err := os.Open(moduleJsonFilePath)
 	if err != nil {
@@ -23,7 +23,6 @@ func Delete(module string, rootPath string, cliName string) (int, error) {
 	moduleDirectory := filepath.Clean(
 		filepath.Join(rootPath, module),
 	)
-
 	if err := os.RemoveAll(moduleDirectory); err != nil {
 		return -1, err
 	}
