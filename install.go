@@ -22,6 +22,10 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 		return -1, errors.New("Failed: Please set module name e.g. 'appdec init --name=mymodule'")
 	}
 
+	if name == "commands" || name == "osx" {
+		return -1, errors.New("Failed: cant install module as '" + name + "' because its reserved")
+	}
+
 	/**
 	 * Return when  "appPath" exists
 	 */
