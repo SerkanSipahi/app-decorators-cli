@@ -13,13 +13,13 @@ import (
 	"regexp"
 )
 
-func visit(path string, f os.FileInfo, err error) error {
+func visit(filename string, f os.FileInfo, err error, paths *[]string) error {
 
 	if err != nil {
 		return err
 	}
 
-	if matched, _ := regexp.MatchString("node_modules", path); matched {
+	if matched, _ := regexp.MatchString("node_modules", filename); matched {
 		return nil
 	}
 
@@ -27,7 +27,7 @@ func visit(path string, f os.FileInfo, err error) error {
 		return nil
 	}
 
-	fmt.Printf("Visited: %s\n", path)
+	*paths = append(*paths, filename)
 
 	return nil
 }
@@ -35,7 +35,15 @@ func visit(path string, f os.FileInfo, err error) error {
 func Watch(dir string, callback func(string)) {
 
 	root := filepath.Clean(dir)
-	if err := filepath.Walk(root, visit); err {
+	paths := []string{}
+	err := filepath.Walk(root, func(filename string, f os.FileInfo, err error) error {
+		visit(filename, f, err, &paths)
+		return nil
+	})
+
+	fmt.Println(paths)
+
+	if err != nil {
 		log.Fatal(err)
 	}
 
