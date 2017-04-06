@@ -68,6 +68,13 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	}
 
 	/**
+	 * Cleanup
+	 */
+	if err = os.Remove(appPath + "/package.json"); err != nil {
+		return -1, err
+	}
+
+	/**
 	 * Create app specific json file
 	 */
 	jsonData, err := json.MarshalIndent(appdecConfig, "", "\t")
@@ -83,7 +90,6 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	/**
 	 * Copy core files
 	 */
-
 	fmt.Println("Run: create core files...")
 
 	appDecoratorPath := filepath.Clean(
@@ -99,13 +105,6 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 		if err != nil {
 			return -1, err
 		}
-	}
-
-	/**
-	 * Cleanup
-	 */
-	if err = os.Remove(appPath + "/package.json"); err != nil {
-		return -1, err
 	}
 
 	fmt.Println("Run: done!")

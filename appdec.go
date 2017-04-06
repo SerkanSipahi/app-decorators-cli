@@ -7,18 +7,7 @@ import (
 	"os"
 )
 
-type Appdec struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-}
-
-const (
-	CLI_NAME     = "appdec"
-	AUTHOR_NAME  = "Serkan Sipahi"
-	AUTHOR_EMAIL = "serkan.sipahi@yahoo.de"
-	APP_VERSION  = "0.8.206"
-	COPYRIGHT    = "(c) 2017"
-)
+// build: go build *.go
 
 func main() {
 
@@ -122,9 +111,16 @@ func main() {
 					Name:  "live",
 					Usage: "force Cmd",
 				},
+				cli.StringFlag{
+					Name:  "name",
+					Value: "",
+					Usage: "set name of the app",
+				},
 			},
 			Action: func(c *cli.Context) error {
-				fmt.Println("completed task: ", c.Args().First())
+				Watch("./collapsible", func(file string) {
+					fmt.Println(file)
+				})
 				return nil
 			},
 		},
