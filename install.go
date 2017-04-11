@@ -42,11 +42,9 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	 * Create "appPath" if not exists
 	 */
 	if err = os.Mkdir(appPath, 0755); err != nil {
-		fmt.Println("222")
 		return -1, err
 	}
 	if err = os.Chdir(appPath); err != nil {
-		fmt.Println("333")
 		return -1, err
 	}
 

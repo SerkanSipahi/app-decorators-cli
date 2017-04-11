@@ -18,7 +18,7 @@ func main() {
 
 	rootPath, err := os.Getwd()
 	if err != nil {
-		log.Fatalln("Failed whilte get root path")
+		log.Fatalln("Failed while getting root path")
 	}
 
 	app := cli.NewApp()
