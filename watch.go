@@ -4,10 +4,9 @@ package main
 // http://stackoverflow.com/questions/6608873/file-system-scanning-in-golang#6612243
 // https://github.com/noypi/filemon/blob/master/example_test.go
 
-// @todo:
+// @todo/@fix:
 // - move watch.go to own repo: http://github.com/serkansipahi/watcher
 // - check weather on runtime new directory with file will created
-// - it should not call two times successively for same file change
 // - allow to pass something like this ./collapsible -r --ignore=node_modules
 
 import (
@@ -21,7 +20,7 @@ import (
 	"regexp"
 )
 
-func getDir(filename string, f os.FileInfo, params ...string) (error, string) {
+func visit(filename string, f os.FileInfo, params ...string) (error, string) {
 
 	var excludeDir string
 	if len(params) == 1 {
@@ -39,20 +38,31 @@ func getDir(filename string, f os.FileInfo, params ...string) (error, string) {
 	return nil, filename
 }
 
-func watchPath(path string, callback func(string)) {
+type xWatcher struct {
+	path     string
+	callback func(string)
+}
+
+func (w *xWatcher) watch() {
 
 	// create a new watcher
-	w := filemon.NewWatcher(func(ev *filemon.WatchEvent) {
+	fmw := filemon.NewWatcher(func(ev *filemon.WatchEvent) {
 		file := fmt.Sprint(ev.Fpath)
 		// ignore __ (intellij), .swp and ~ files
 		if matched, _ := regexp.MatchString("(__|\\.swp|~)$", file); matched {
 			return
 		}
 
-		callback(file)
+		// it should not call two times successively for same file change
+		evT := ev.Type
+		if evT < 2 {
+			return
+		}
+
+		w.callback(file)
 	})
 
-	w.Watch(path)
+	fmw.Watch(w.path)
 }
 
 func Watch(dir string, callback func(string)) {
@@ -66,7 +76,7 @@ func Watch(dir string, callback func(string)) {
 			panic(err)
 		}
 
-		if err, name = getDir(name, f, "node_modules"); err == nil {
+		if err, name = visit(name, f, "node_modules"); err == nil {
 			paths = append(paths, name)
 		}
 
@@ -79,7 +89,8 @@ func Watch(dir string, callback func(string)) {
 
 	// watch determined paths
 	for _, path := range paths {
-		go watchPath(path, callback)
+		watcher := xWatcher{path, callback}
+		go watcher.watch()
 	}
 
 	// wait for kill signal
