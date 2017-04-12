@@ -7,7 +7,9 @@ package main
 // @todo/@fix:
 // - move watch.go to own repo: http://github.com/serkansipahi/watcher
 // - check weather on runtime new directory with file will created
-// - allow to pass something like this ./collapsible -r --ignore=node_modules
+// - allow to pass something like this ./collapsible -r --ignore=node_modules --type=modify
+// - when "a" changed, then b, sometimes intellij trigger "a" and "b" instead of just "b"
+// - http://stackoverflow.com/questions/10383498/how-does-go-update-third-party-packages
 
 import (
 	"errors"
@@ -38,18 +40,13 @@ func visit(filename string, f os.FileInfo, params ...string) (error, string) {
 	return nil, filename
 }
 
-type xWatcher struct {
-	path     string
-	callback func(string)
-}
-
-func (w *xWatcher) watch() {
+func watchDir(path string, callback func(string)) {
 
 	// create a new watcher
 	fmw := filemon.NewWatcher(func(ev *filemon.WatchEvent) {
 		file := fmt.Sprint(ev.Fpath)
 		// ignore __ (intellij), .swp and ~ files
-		if matched, _ := regexp.MatchString("(__|\\.swp|~)$", file); matched {
+		if _, err := os.Stat(file); err != nil {
 			return
 		}
 
@@ -60,10 +57,10 @@ func (w *xWatcher) watch() {
 			return
 		}
 
-		w.callback(file)
+		callback(file)
 	})
 
-	fmw.Watch(w.path)
+	fmw.Watch(path)
 }
 
 func Watch(dir string, callback func(string)) {
@@ -90,8 +87,7 @@ func Watch(dir string, callback func(string)) {
 
 	// watch determined paths
 	for _, path := range paths {
-		watcher := xWatcher{path, callback}
-		go watcher.watch()
+		go watchDir(path, callback)
 	}
 
 	// wait for kill signal
