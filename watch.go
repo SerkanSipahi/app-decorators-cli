@@ -54,8 +54,9 @@ func (w *xWatcher) watch() {
 		}
 
 		// it should not call two times successively for same file change
+		// create 0, modify 1, delete 2, rename 3, attrib 5 see ev.Type
 		evT := ev.Type
-		if evT < 2 {
+		if evT == 1 {
 			return
 		}
 
