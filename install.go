@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/serkansipahi/app-decorators-cli/osx"
+	"github.com/serkansipahi/app-decorators-cli/osX"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -52,7 +52,7 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	 * Init npm package.json
 	 */
 	fmt.Println("Run: install...")
-	cmdNpmInit := osx.Cmd("npm", "init", "-y", debugCommand)
+	cmdNpmInit := osX.Command{"npm", "init", "-y", debugCommand}
 	if err = cmdNpmInit.Run(); err != nil {
 		return -1, err
 	}
@@ -60,10 +60,18 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	/*
 	 * Install app-decorators via npm
 	 */
-	cmdNpmInstall := osx.Cmd("npm", "install", "app-decorators@"+appdecConfig.Version, debugCommand)
-	if err = cmdNpmInstall.Run(); err != nil {
+	cmdInstAppdec := osX.Command{"npm", "install", "app-decorators@" + appdecConfig.Version, debugCommand}
+	if err = cmdInstAppdec.Run(); err != nil {
 		return -1, err
 	}
+
+	/*
+	 * Install babel-cli
+	 */
+
+	// ...
+	// ...code..
+	// ...
 
 	/**
 	 * Cleanup
@@ -93,13 +101,13 @@ func Install(appdecConfig Appdec, rootPath string, cliName string, debugCommand 
 	appDecoratorPath := filepath.Clean(
 		filepath.Join(rootPath, appdecConfig.Name, "node_modules/app-decorators"),
 	)
-	files, _ := osx.ReadFiles(appDecoratorPath)
+	files, _ := osX.ReadFiles(appDecoratorPath)
 	for _, file := range files {
 
 		src := filepath.Join(appDecoratorPath, file.Name())
 		dist := filepath.Join(rootPath, appdecConfig.Name, file.Name())
 
-		err := osx.CopyFile(src, dist)
+		err := osX.CopyFile(src, dist)
 		if err != nil {
 			return -1, err
 		}

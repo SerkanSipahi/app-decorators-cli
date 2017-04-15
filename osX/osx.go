@@ -1,43 +1,62 @@
-package osx
+package osX
 
 import (
-	"os/exec"
-	"os"
-	"errors"
 	"encoding/json"
-	"io/ioutil"
-	"path/filepath"
+	"errors"
 	"io"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
 )
 
-// LookPath searches for an executable binary named file
-// in the directories named by the PATH environment variable.
-// If file contains a slash, it is tried directly and the PATH is not consulted.
-// The result may be an absolute path or a path relative to the current directory.
-func Which(bin string) (string, error) {
+// Errors
+var ErrorBinNotExists = errors.New("Please make sure you have git or npm installed")
 
-	path, err := exec.LookPath(bin)
+type Which struct{}
+
+type Whicher interface {
+	Which(string) (string, error)
+}
+
+func (w Which) Which(bin string) (string, error) {
+
+	path, err := w.lookAtPath(bin)
 	if err != nil {
-		err = errors.New("Please make sure you have '" + bin + "' installed")
+		err = ErrorBinNotExists
 	}
 
 	return path, err
 }
 
-// Execute command
-func Cmd(name string, arg string, option string, debug ...bool) exec.Cmd {
+func (w Which) lookAtPath(bin string) (string, error) {
+	return exec.LookPath(bin)
+}
 
-	cmd := *exec.Command(name, arg, option)
-	if debug[0] == true {
+// Commander
+type Commander interface {
+	Run(name string, arg string, option string, debug ...bool)
+}
+
+type Command struct {
+	Name   string
+	Arg    string
+	Option string
+	Debug  bool
+}
+
+func (c Command) Run() error {
+	return c.run()
+}
+
+func (c Command) run() error {
+	cmd := *exec.Command(c.Name, c.Arg, c.Option)
+	if c.Debug == true {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 	}
 
-	return cmd
-}
-
-func CopyDirFiles(src string, dist string) (int, error){
-	return 1, nil
+	return cmd.Run()
 }
 
 // CopyFile/CopyDir https://gist.github.com/m4ng0squ4sh/92462b38df26839a3ca324697c8cba04
@@ -105,7 +124,7 @@ func ReadFiles(src string) ([]os.FileInfo, error) {
 			continue
 		}
 		// Skip symlinks
-		if entry.Mode() & os.ModeSymlink != 0 {
+		if entry.Mode()&os.ModeSymlink != 0 {
 			continue
 		}
 
@@ -114,7 +133,6 @@ func ReadFiles(src string) ([]os.FileInfo, error) {
 
 	return files, nil
 }
-
 
 func JsonStringify(config interface{}) ([]byte, error) {
 	return json.MarshalIndent(config, "", "\t")

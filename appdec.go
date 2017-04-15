@@ -2,16 +2,20 @@ package main
 
 import (
 	"fmt"
+	"github.com/serkansipahi/app-decorators-cli/osX"
 	"github.com/urfave/cli"
 	"log"
 	"os"
 )
 
+// @todo/@fixme
+// - check weather an new version app-decorator is available. When "yes" ask for upgrade
+
 // build: go build *.go
 
 func main() {
 
-	_, err := Init()
+	_, err := Init(osX.Which{})
 	if err != nil {
 		log.Fatalln("Failed while initializing...", err)
 	}
@@ -118,9 +122,16 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				Watch("./collapsible", func(file string) {
-					fmt.Println(file)
-				})
+
+				name := c.String("name")
+				if name == "" {
+					log.Fatalln("Failed: please pass module-name with --name=mymodule")
+				}
+
+				if _, err := Server(name); err != nil {
+					log.Fatalln("Failed while Server...", err)
+				}
+
 				return nil
 			},
 		},

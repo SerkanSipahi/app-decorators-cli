@@ -1,24 +1,21 @@
 package main
 
 import (
-	"fmt"
-	"github.com/serkansipahi/app-decorators-cli/osx"
+	"github.com/serkansipahi/app-decorators-cli/osX"
 )
 
-func Init() (int, error) {
-
-	fmt.Println("Run: initialize...")
+func Init(e osX.Whicher) (int, error) {
 
 	var (
 		_   string
 		err error
 	)
 
-	_, err = osx.Which("git")
+	_, err = e.Which("git")
 	if err != nil {
 		return -1, err
 	}
-	_, err = osx.Which("npm")
+	_, err = e.Which("npm")
 	if err != nil {
 		return -1, err
 	}
