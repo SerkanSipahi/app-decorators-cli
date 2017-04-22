@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/serkansipahi/app-decorators-cli/install"
 	"github.com/serkansipahi/app-decorators-cli/osX"
 	"github.com/urfave/cli"
 	"log"
@@ -14,6 +15,10 @@ import (
 // build: go build *.go
 
 func main() {
+
+	//config := install.Config{"a", "1.0"}
+	//installer := install.New(config, "b", "c")
+	//installer.Run()
 
 	_, err := Init(osX.Which{})
 	if err != nil {
@@ -58,19 +63,21 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 
+				// assign passed args
 				name := c.String("name")
 				debug := c.Bool("debug")
-				appdec := Appdec{
-					name,
-					APP_VERSION,
-				}
 
-				_, err = Install(
-					appdec,
+				// create installer
+				installer := install.New(
+					name,
 					rootPath,
+					APP_VERSION,
 					CLI_NAME,
 					debug,
 				)
+
+				// start installer
+				_, err := installer.Run()
 				if err != nil {
 					log.Fatalln("Failed while installing...", err)
 				}

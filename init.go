@@ -1,10 +1,10 @@
 package main
 
-import (
-	"github.com/serkansipahi/app-decorators-cli/osX"
-)
+type Initer interface {
+	Which(string) (string, error)
+}
 
-func Init(e osX.Whicher) (int, error) {
+func Init(e Initer) (int, error) {
 
 	var (
 		_   string

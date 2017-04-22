@@ -3,6 +3,7 @@ package osX
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -13,12 +14,31 @@ import (
 // Errors
 var ErrorBinNotExists = errors.New("Please make sure you have git or npm installed")
 
-type Which struct{}
-
+// Interfaces
+type Commander interface {
+	Run()
+}
+type Commanders interface {
+	Run()
+}
 type Whicher interface {
 	Which(string) (string, error)
 }
 
+// Structs
+type Command struct {
+	Name   string
+	Arg    string
+	Option string
+	Err    error
+	Debug  bool
+}
+type Commands struct {
+	Stack []Command
+}
+type Which struct{}
+
+// Receivers
 func (w Which) Which(bin string) (string, error) {
 
 	path, err := w.lookAtPath(bin)
@@ -33,23 +53,21 @@ func (w Which) lookAtPath(bin string) (string, error) {
 	return exec.LookPath(bin)
 }
 
-// Commander
-type Commander interface {
-	Run(name string, arg string, option string, debug ...bool)
+func (c Commands) Run() error {
+
+	for _, stack := range c.Stack {
+		fmt.Println("Run: " + stack.Name + " " + stack.Arg + " " + stack.Option)
+		if err := stack.Run(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-type Command struct {
-	Name   string
-	Arg    string
-	Option string
-	Debug  bool
-}
-
-func (c Command) Run() error {
-	return c.run()
-}
-
+func (c Command) Run() error { return c.run() }
 func (c Command) run() error {
+
 	cmd := *exec.Command(c.Name, c.Arg, c.Option)
 	if c.Debug == true {
 		cmd.Stdout = os.Stdout
