@@ -1,11 +1,11 @@
 package install
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/serkansipahi/app-decorators-cli/exec"
 	"github.com/serkansipahi/app-decorators-cli/osX"
+	"github.com/serkansipahi/app-decorators-cli/util/exec"
+	"github.com/serkansipahi/app-decorators-cli/util/json"
 	"io/ioutil"
 	"log"
 	"os"
@@ -24,13 +24,22 @@ func New(name string, rootPath string, version string, cliName string, debug boo
 	}
 }
 
-/**
- * IOs/Os
- */
-type Ios interface {
+type Chder interface {
 	Chdir(src string) error
+}
+
+type Mkder interface {
 	Mkdir(src string, perm os.FileMode) error
+}
+
+type Remover interface {
 	Remove(src string) error
+}
+
+type Oser interface {
+	Chder
+	Mkder
+	Remover
 }
 
 type Os struct{}
@@ -63,12 +72,14 @@ type Install struct {
 
 func (i Install) Run() (int, error) {
 
-	// hier alle dependencies passen
-
-	return i.Install(Os{})
+	return i.Install(
+		Os{},
+		json.New(),
+		*exec.New(false, i.Debug),
+	)
 }
 
-func (i Install) Install(os Ios) (int, error) {
+func (i Install) Install(os Oser, json json.Stringifyer, exec exec.Commands) (int, error) {
 
 	var (
 		err     error
@@ -109,13 +120,13 @@ func (i Install) Install(os Ios) (int, error) {
 		return -1, err
 	}
 
-	commands := exec.New([]string{
+	err = exec.Run([]string{
 		"npm init -y",
 		"npm install " + appDecPkg,
 		"npm install " + babelCliPkg,
-	}, false, i.Debug)
+	})
 
-	if err := commands.Run(); err != nil {
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -134,7 +145,7 @@ func (i Install) Install(os Ios) (int, error) {
 		Name:    i.Name,
 		Version: i.Version,
 	}
-	jsonData, err := json.MarshalIndent(config, "", "\t")
+	jsonData, err := json.Stringify(config)
 	if err != nil {
 		return -1, err
 	}

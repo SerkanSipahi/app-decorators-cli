@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-func New(commandsCol []string, opts ...bool) *Commands {
+func New(opts ...bool) *Commands {
 
 	var async bool
 	var debug bool
@@ -25,9 +25,28 @@ func New(commandsCol []string, opts ...bool) *Commands {
 		debug = opts[1]
 	}
 
-	commands := &Commands{
+	return &Commands{
 		Async: async,
+		Debug: debug,
 	}
+}
+
+/////////////////////////
+//// Multi Commands /////
+/////////////////////////
+
+type Execers interface {
+	Run() error
+}
+
+type Commands struct {
+	Commands []Command
+	Async    bool
+	Debug    bool
+}
+
+func (c *Commands) Run(commandsCol []string) error {
+
 	for _, commandStr := range commandsCol {
 
 		args := strings.Split(commandStr, " ")
@@ -38,51 +57,30 @@ func New(commandsCol []string, opts ...bool) *Commands {
 		command := &Command{
 			args[0],
 			args[1:],
-			debug,
+			c.Debug,
 		}
 
-		commands.Stack = append(commands.Stack, *command)
+		c.Commands = append(c.Commands, *command)
 	}
-	return commands
-}
 
-/////////////////////////
-//// Multi Commands /////
-/////////////////////////
-
-type ICommands interface {
-	Run() error
-	RunAsync() error
-	RunSequential() error
-}
-
-type Commands struct {
-	Stack []Command
-	Async bool
-	Debug bool
-}
-
-func (c Commands) Run() error {
-
-	var commands []Command = c.Stack
 	if c.Async == true {
-		c.RunAsync(commands)
+		c.RunAsync()
 	} else {
-		c.RunSequential(commands)
+		c.RunSequential()
 	}
 
 	return nil
 }
 
-func (c Commands) RunAsync(commands []Command) error {
+func (c *Commands) RunAsync() error {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	var wg sync.WaitGroup
-	wg.Add(len(c.Stack))
+	wg.Add(len(c.Commands))
 
 	fmt.Println("Run: async")
-	for _, stack := range commands {
+	for _, stack := range c.Commands {
 		go func(stack Command) {
 
 			defer wg.Done()
@@ -99,10 +97,10 @@ func (c Commands) RunAsync(commands []Command) error {
 	return nil
 }
 
-func (c Commands) RunSequential(commands []Command) error {
+func (c *Commands) RunSequential() error {
 
 	fmt.Println("Run: sequential")
-	for _, stack := range commands {
+	for _, stack := range c.Commands {
 		err := stack.Run()
 		if err != nil {
 			log.Fatal(err)
@@ -115,10 +113,6 @@ func (c Commands) RunSequential(commands []Command) error {
 /////////////////////////
 //// Single Command /////
 /////////////////////////
-
-type ICommand interface {
-	Run() error
-}
 
 type Command struct {
 	Name  string

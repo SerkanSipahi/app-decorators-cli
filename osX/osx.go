@@ -1,7 +1,6 @@
 package osX
 
 import (
-	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -107,19 +106,4 @@ func ReadFiles(src string) ([]os.FileInfo, error) {
 	}
 
 	return files, nil
-}
-
-func JsonStringify(config interface{}) ([]byte, error) {
-	return json.MarshalIndent(config, "", "\t")
-}
-
-func JsonParse(file string, s interface{}) interface{} {
-
-	raw, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
-
-	json.Unmarshal(raw, &s)
-	return s
 }
