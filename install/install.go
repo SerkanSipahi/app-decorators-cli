@@ -3,12 +3,11 @@ package install
 import (
 	"errors"
 	"fmt"
-	"github.com/serkansipahi/app-decorators-cli/osX"
 	"github.com/serkansipahi/app-decorators-cli/util/exec"
 	"github.com/serkansipahi/app-decorators-cli/util/json"
+	"github.com/serkansipahi/app-decorators-cli/util/os"
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 )
 
@@ -22,38 +21,6 @@ func New(name string, rootPath string, version string, cliName string, debug boo
 		version,
 		debug,
 	}
-}
-
-type Chder interface {
-	Chdir(src string) error
-}
-
-type Mkder interface {
-	Mkdir(src string, perm os.FileMode) error
-}
-
-type Remover interface {
-	Remove(src string) error
-}
-
-type Oser interface {
-	Chder
-	Mkder
-	Remover
-}
-
-type Os struct{}
-
-func (o Os) Chdir(src string) error {
-	return os.Chdir(src)
-}
-
-func (o Os) Mkdir(src string, perm os.FileMode) error {
-	return os.Mkdir(src, perm)
-}
-
-func (o Os) Remove(src string) error {
-	return os.Remove(src)
 }
 
 type Config struct {
@@ -73,13 +40,13 @@ type Install struct {
 func (i Install) Run() (int, error) {
 
 	return i.Install(
-		Os{},
+		os.Os{},
 		json.New(),
-		*exec.New(false, i.Debug),
+		exec.New(false, i.Debug),
 	)
 }
 
-func (i Install) Install(os Oser, json json.Stringifyer, exec exec.Commands) (int, error) {
+func (i Install) Install(os os.Os, json json.Stringifyer, exec exec.Execers) (int, error) {
 
 	var (
 		err     error
@@ -164,13 +131,13 @@ func (i Install) Install(os Oser, json json.Stringifyer, exec exec.Commands) (in
 	appDecoratorPath := filepath.Clean(
 		filepath.Join(i.RootPath, i.Name, "node_modules", "app-decorators"),
 	)
-	files, _ := osX.ReadFiles(appDecoratorPath)
+	files, _ := os.ReadFiles(appDecoratorPath)
 	for _, file := range files {
 
 		src := filepath.Join(appDecoratorPath, file.Name())
 		dist := filepath.Join(i.RootPath, i.Name, file.Name())
 
-		err := osX.CopyFile(src, dist)
+		err := os.CopyFile(src, dist)
 		if err != nil {
 			return -1, err
 		}

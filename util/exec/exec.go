@@ -36,7 +36,7 @@ func New(opts ...bool) *Commands {
 /////////////////////////
 
 type Execers interface {
-	Run() error
+	Run([]string) error
 }
 
 type Commands struct {
