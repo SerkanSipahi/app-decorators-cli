@@ -3,7 +3,6 @@ package osX
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -14,28 +13,10 @@ import (
 // Errors
 var ErrorBinNotExists = errors.New("Please make sure you have git or npm installed")
 
-// Interfaces
-type Commander interface {
-	Run()
-}
-type Commanders interface {
-	Run()
-}
 type Whicher interface {
 	Which(string) (string, error)
 }
 
-// Structs
-type Command struct {
-	Name   string
-	Arg    string
-	Option string
-	Err    error
-	Debug  bool
-}
-type Commands struct {
-	Stack []Command
-}
 type Which struct{}
 
 // Receivers
@@ -51,30 +32,6 @@ func (w Which) Which(bin string) (string, error) {
 
 func (w Which) lookAtPath(bin string) (string, error) {
 	return exec.LookPath(bin)
-}
-
-func (c Commands) Run() error {
-
-	for _, stack := range c.Stack {
-		fmt.Println("Run: " + stack.Name + " " + stack.Arg + " " + stack.Option)
-		if err := stack.Run(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c Command) Run() error { return c.run() }
-func (c Command) run() error {
-
-	cmd := *exec.Command(c.Name, c.Arg, c.Option)
-	if c.Debug == true {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-
-	return cmd.Run()
 }
 
 // CopyFile/CopyDir https://gist.github.com/m4ng0squ4sh/92462b38df26839a3ca324697c8cba04

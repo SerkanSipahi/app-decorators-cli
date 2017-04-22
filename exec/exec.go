@@ -25,8 +25,6 @@ func New(commandsCol []string, opts ...bool) *Commands {
 		debug = opts[1]
 	}
 
-	fmt.Println("==>", async, debug)
-
 	commands := &Commands{
 		Async: async,
 	}
