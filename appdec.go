@@ -77,8 +77,7 @@ func main() {
 				)
 
 				// start installer
-				_, err := installer.Run()
-				if err != nil {
+				if err := installer.Run(); err != nil {
 					log.Fatalln("Failed while installing...", err)
 				}
 

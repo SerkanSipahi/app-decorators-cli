@@ -7,7 +7,7 @@ import (
 	"github.com/serkansipahi/app-decorators-cli/util/json"
 	"github.com/serkansipahi/app-decorators-cli/util/os"
 	"io/ioutil"
-	"log"
+	"path"
 	"path/filepath"
 )
 
@@ -23,9 +23,30 @@ func New(name string, rootPath string, version string, cliName string, debug boo
 	}
 }
 
+var (
+	ErrNoModuleName        = errors.New("Failed: Please set module name e.g. 'appdec init --name=mymodule'")
+	ErrAppPathExists       = errors.New("Failed: Apppath exists")
+	ErrCantChangeToApppath = errors.New("Failed: cant change to apppath")
+	ErrCantInstallDeps     = errors.New("Failed: someting gone wrong while installing dependencies")
+	ErrWhileCleanup        = errors.New("Failed: someting gone wrong while cleaning")
+)
+
 type Config struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
+}
+
+type appPathExists interface {
+	os.Chder
+}
+
+type createAppPath interface {
+	os.Mkder
+	os.Chder
+}
+
+type installDependencies interface {
+	exec.Execers
 }
 
 type Install struct {
@@ -37,7 +58,7 @@ type Install struct {
 	Debug    bool
 }
 
-func (i Install) Run() (int, error) {
+func (i Install) Run() error {
 
 	return i.Install(
 		os.Os{},
@@ -46,7 +67,46 @@ func (i Install) Run() (int, error) {
 	)
 }
 
-func (i Install) Install(os os.Os, json json.Stringifyer, exec exec.Execers) (int, error) {
+func (i Install) AppPathExists(appPath string, os appPathExists) error {
+
+	_, name := path.Split(appPath)
+
+	if err := os.Chdir(appPath); err == nil {
+		err = errors.New(fmt.Sprintf("\n"+
+			"Run: '%s' already created\n"+
+			"You can delete it with 'appdec delete --name=%s\n"+
+			"", name, name))
+
+		return err
+	}
+	return nil
+}
+
+func (i Install) CreateAppPath(appPath string, os createAppPath) error {
+
+	var err error
+
+	if err = os.Mkdir(appPath, 0755); err != nil {
+		return ErrAppPathExists
+	}
+	if err = os.Chdir(appPath); err != nil {
+		return ErrCantChangeToApppath
+	}
+	return nil
+}
+
+func (i Install) InstallDeps(commands []string, exec installDependencies) error {
+
+	var err error
+
+	err = exec.Run(commands)
+	if err != nil {
+		return ErrCantInstallDeps
+	}
+	return nil
+}
+
+func (i Install) Install(os os.Os, json json.Stringifyer, exec installDependencies) error {
 
 	var (
 		err     error
@@ -58,74 +118,52 @@ func (i Install) Install(os os.Os, json json.Stringifyer, exec exec.Execers) (in
 	)
 
 	if name == "" {
-		return -1, errors.New("Failed: Please set module name e.g. 'appdec init --name=mymodule'")
+		return ErrNoModuleName
 	}
 
-	if name == "commands" || name == "osx" {
-		return -1, errors.New("Failed: cant install module as '" + name + "' because its reserved")
+	// Return when  "appPath" exists
+	if err = i.AppPathExists(appPath, os); err != nil {
+		return err
 	}
 
-	/**
-	 * Return when  "appPath" exists
-	 */
-	if err = os.Chdir(appPath); err == nil {
-		err = errors.New(fmt.Sprintf("\n"+
-			"Run: '%s' already created\n"+
-			"You can delete it with 'appdec delete --name=%s\n"+
-			"", name, name))
-
-		return -1, err
+	// Create "appPath" if not exists
+	if err := i.CreateAppPath(appPath, os); err != nil {
+		return err
 	}
 
-	/**
-	 * Create "appPath" if not exists
-	 */
-	if err = os.Mkdir(appPath, 0755); err != nil {
-		return -1, err
-	}
-	if err = os.Chdir(appPath); err != nil {
-		return -1, err
-	}
-
-	err = exec.Run([]string{
+	// Install dependencies
+	err = i.InstallDeps([]string{
 		"npm init -y",
 		"npm install " + appDecPkg,
 		"npm install " + babelCliPkg,
-	})
-
+	}, exec)
 	if err != nil {
-		log.Fatal(err)
+		return ErrCantInstallDeps
 	}
 
-	/**
-	 * Cleanup
-	 */
+	// Cleanup
 	pkgJsonPath := filepath.Join(appPath, "package.json")
 	if err = os.Remove(pkgJsonPath); err != nil {
-		return -1, err
+		return ErrWhileCleanup
 	}
 
-	/**
-	 * Create app specific json file
-	 */
+	// Create app specific json file
 	config := Config{
 		Name:    i.Name,
 		Version: i.Version,
 	}
 	jsonData, err := json.Stringify(config)
 	if err != nil {
-		return -1, err
+		return err
 	}
 
 	fmt.Println("Run: create " + i.CliName + ".json...")
 	appDecJsonPath := filepath.Join(appPath, i.CliName+".json")
 	if err = ioutil.WriteFile(appDecJsonPath, jsonData, 0755); err != nil {
-		return -1, err
+		return err
 	}
 
-	/**
-	 * Copy core files
-	 */
+	// Copy core files
 	fmt.Println("Run: create core files...")
 
 	appDecoratorPath := filepath.Clean(
@@ -139,11 +177,10 @@ func (i Install) Install(os os.Os, json json.Stringifyer, exec exec.Execers) (in
 
 		err := os.CopyFile(src, dist)
 		if err != nil {
-			return -1, err
+			return err
 		}
 	}
 
 	fmt.Println("Run: done!")
-
-	return 1, nil
+	return nil
 }
