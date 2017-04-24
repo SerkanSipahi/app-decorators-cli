@@ -8,16 +8,24 @@ import (
 )
 
 // interfaces
-type Chder interface {
+type Chdir interface {
 	Chdir(src string) error
 }
 
-type Mkder interface {
+type Mkdir interface {
 	Mkdir(src string, perm os.FileMode) error
 }
 
 type Remover interface {
 	Remove(src string) error
+}
+
+type ReadFiler interface {
+	ReadFiles(src string) ([]os.FileInfo, error)
+}
+
+type CopyFiler interface {
+	CopyFile(src, dst string) (err error)
 }
 
 // struct
