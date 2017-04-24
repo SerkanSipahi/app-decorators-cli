@@ -210,19 +210,19 @@ func (i Install) Install(os os.Os, json json.Stringifyer, exec Deps) error {
 
 	// Cleanup
 	if err = i.Cleanup(appPath, os); err != nil {
-		return ErrWhileCleanup
+		return err
 	}
 
 	// Create app specific json file
 	fmt.Println("Run: create " + i.CliName + ".json...")
 	if err = i.CreateAppJson(appPath, json); err != nil {
-		return ErrWhileCleanup
+		return err
 	}
 
 	// Copy core files
 	fmt.Println("Run: create core files...")
 	if err = i.CopyCoreFiles(os); err != nil {
-		return ErrWhileCleanup
+		return err
 	}
 
 	fmt.Println("Run: done!")
