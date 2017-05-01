@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/util/exec"
 	"github.com/serkansipahi/app-decorators-cli/util/json"
-	"github.com/serkansipahi/app-decorators-cli/util/os"
+	osx "github.com/serkansipahi/app-decorators-cli/util/os"
 	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 )
@@ -24,27 +25,9 @@ type Config struct {
 	Version string `json:"version"`
 }
 
-type AppExists interface {
-	os.Chdir
-}
-
-type CreateApp interface {
-	os.Mkdir
-	os.Chdir
-}
-
-type Deps interface {
-	exec.Execers
-}
-
-type Clean interface {
-	os.Remover
-}
-
 type CopyCore interface {
-	os.Remover
-	os.ReadFiler
-	os.CopyFiler
+	osx.ReadFiler
+	osx.CopyFiler
 }
 
 func New(name string, rootPath string, version string, cliName string, debug bool) *Install {
@@ -71,13 +54,11 @@ type Install struct {
 func (i Install) Run() error {
 
 	return i.Install(
-		os.Os{},
-		json.New(),
 		exec.New(false, i.Debug),
 	)
 }
 
-func (i Install) AppPathExists(appPath string, os AppExists) error {
+func (i Install) AppPathExists(appPath string) error {
 
 	_, name := path.Split(appPath)
 
@@ -93,7 +74,7 @@ func (i Install) AppPathExists(appPath string, os AppExists) error {
 	return nil
 }
 
-func (i Install) CreateAppPath(appPath string, os CreateApp) error {
+func (i Install) CreateAppPath(appPath string) error {
 
 	var err error
 
@@ -107,19 +88,7 @@ func (i Install) CreateAppPath(appPath string, os CreateApp) error {
 	return nil
 }
 
-func (i Install) InstallDeps(commands []string, exec Deps) error {
-
-	var err error
-
-	err = exec.Run(commands)
-	if err != nil {
-		return ErrCantInstallDeps
-	}
-
-	return nil
-}
-
-func (i Install) Cleanup(appPath string, os Clean) error {
+func (i Install) Cleanup(appPath string) error {
 
 	var err error
 
@@ -171,7 +140,7 @@ func (i Install) CopyCoreFiles(os CopyCore) error {
 	return nil
 }
 
-func (i Install) Install(os os.Os, json json.Stringifyer, exec Deps) error {
+func (i Install) Install(exec exec.Execer) error {
 
 	var (
 		err     error
@@ -189,39 +158,42 @@ func (i Install) Install(os os.Os, json json.Stringifyer, exec Deps) error {
 	// Todo: create first app specific json
 
 	// Return when  "appPath" exists
-	if err = i.AppPathExists(appPath, os); err != nil {
+	if err = i.AppPathExists(appPath); err != nil {
 		return err
 	}
 
 	// Create "appPath" if not exists
-	if err := i.CreateAppPath(appPath, os); err != nil {
+	if err := i.CreateAppPath(appPath); err != nil {
 		return err
 	}
 
 	// Install dependencies
-	err = i.InstallDeps([]string{
+	// Todo: only this should be simulated, others (see above/below) can be used without
+	// mock in integration test for Install()
+
+	err = exec.Run([]string{
 		"npm init -y",
 		"npm install " + appDecPkg,
 		"npm install " + babelCliPkg,
-	}, exec)
+	})
 	if err != nil {
 		return ErrCantInstallDeps
 	}
 
 	// Cleanup
-	if err = i.Cleanup(appPath, os); err != nil {
+	if err = i.Cleanup(appPath); err != nil {
 		return err
 	}
 
 	// Create app specific json file
 	fmt.Println("Run: create " + i.CliName + ".json...")
-	if err = i.CreateAppJson(appPath, json); err != nil {
+	if err = i.CreateAppJson(appPath, json.New()); err != nil {
 		return err
 	}
 
 	// Copy core files
 	fmt.Println("Run: create core files...")
-	if err = i.CopyCoreFiles(os); err != nil {
+	if err = i.CopyCoreFiles(osx.Os{}); err != nil {
 		return err
 	}
 

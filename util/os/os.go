@@ -1,23 +1,17 @@
 package os
 
 import (
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
 // interfaces
-type Chdir interface {
-	Chdir(src string) error
-}
-
-type Mkdir interface {
-	Mkdir(src string, perm os.FileMode) error
-}
-
-type Remover interface {
-	Remove(src string) error
+type Whicher interface {
+	Which(string) (string, error)
 }
 
 type ReadFiler interface {
@@ -31,16 +25,18 @@ type CopyFiler interface {
 // struct
 type Os struct{}
 
-func (o Os) Chdir(src string) error {
-	return os.Chdir(src)
+func (o Os) Which(bin string) (string, error) {
+
+	path, err := o.lookAtPath(bin)
+	if err != nil {
+		err = errors.New("Please make sure you have " + bin + " installed")
+	}
+
+	return path, err
 }
 
-func (o Os) Mkdir(src string, perm os.FileMode) error {
-	return os.Mkdir(src, perm)
-}
-
-func (o Os) Remove(src string) error {
-	return os.Remove(src)
+func (o Os) lookAtPath(bin string) (string, error) {
+	return exec.LookPath(bin)
 }
 
 // CopyFile/CopyDir https://gist.github.com/m4ng0squ4sh/92462b38df26839a3ca324697c8cba04

@@ -31,11 +31,9 @@ func New(opts ...bool) *Commands {
 	}
 }
 
-/////////////////////////
-//// Multi Commands /////
-/////////////////////////
+// Multi Commands
 
-type Execers interface {
+type Execer interface {
 	Run([]string) error
 }
 
@@ -110,9 +108,7 @@ func (c *Commands) RunSequential() error {
 	return nil
 }
 
-/////////////////////////
-//// Single Command /////
-/////////////////////////
+//  Single Command
 
 type Command struct {
 	Name  string

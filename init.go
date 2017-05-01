@@ -1,10 +1,8 @@
 package main
 
-type Initer interface {
-	Which(string) (string, error)
-}
+import "github.com/serkansipahi/app-decorators-cli/util/os"
 
-func Init(e Initer) (int, error) {
+func Init(e os.Whicher) (int, error) {
 
 	var (
 		_   string

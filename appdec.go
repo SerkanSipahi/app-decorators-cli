@@ -3,24 +3,23 @@ package main
 import (
 	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/install"
-	"github.com/serkansipahi/app-decorators-cli/osX"
+	utilOs "github.com/serkansipahi/app-decorators-cli/util/os"
 	"github.com/urfave/cli"
 	"log"
 	"os"
 )
 
-// @todo/@fixme
-// - check weather an new version app-decorator is available. When "yes" ask for upgrade
-
-// build: go build *.go
+const (
+	CLI_NAME     = "appdec"
+	AUTHOR_NAME  = "Serkan Sipahi"
+	AUTHOR_EMAIL = "serkan.sipahi@yahoo.de"
+	APP_VERSION  = "0.8.206"
+	COPYRIGHT    = "(c) 2017"
+)
 
 func main() {
 
-	//config := install.Config{"a", "1.0"}
-	//installer := install.New(config, "b", "c")
-	//installer.Run()
-
-	_, err := Init(osX.Which{})
+	_, err := Init(utilOs.Os{})
 	if err != nil {
 		log.Fatalln("Failed while initializing...", err)
 	}
