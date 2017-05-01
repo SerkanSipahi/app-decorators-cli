@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/serkansipahi/app-decorators-cli/util/watcher"
 )
 
 func Server(name string) (int8, error) {
@@ -11,7 +12,7 @@ func Server(name string) (int8, error) {
 		return -1, errors.New("Please pass module name")
 	}
 
-	Watch("./collapsible", func(file string) {
+	watcher.Watch("./collapsible", func(file string) {
 		fmt.Println(file)
 	})
 

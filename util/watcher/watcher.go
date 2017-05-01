@@ -1,4 +1,4 @@
-package main
+package watcher
 
 // resources/inspiration:
 // http://stackoverflow.com/questions/6608873/file-system-scanning-in-golang#6612243
