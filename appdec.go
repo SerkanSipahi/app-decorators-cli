@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/cli"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -98,7 +99,7 @@ func main() {
 			Action: func(c *cli.Context) error {
 
 				name := c.String("name")
-				_, err := Delete(name, rootPath, CLI_NAME)
+				_, err := Delete(rootPath, name, CLI_NAME)
 				if err != nil {
 					log.Fatalln("Failed while deleting...", err)
 				}
@@ -136,10 +137,21 @@ func main() {
 					log.Fatalln("Failed: please pass module-name with --name=mymodule")
 				}
 
-				if _, err := Server(name, dev, production); err != nil {
+				appPath := filepath.Join(rootPath, name)
+				if err := Server(appPath, dev, production, "node_modules"); err != nil {
 					log.Fatalln("Failed while Server...", err)
 				}
 
+				return nil
+			},
+		},
+		{
+			Name:      "list",
+			Aliases:   []string{"l"},
+			Usage:     "list usage",
+			UsageText: "list usage text",
+			Action: func(c *cli.Context) error {
+				fmt.Println("list all modules")
 				return nil
 			},
 		},

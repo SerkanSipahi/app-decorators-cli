@@ -129,7 +129,7 @@ func (i Install) Install(exec exec.Execer) error {
 	var (
 		err     error
 		name    string = i.Name
-		appPath string = i.RootPath + "/" + name
+		appPath string = filepath.Join(i.RootPath, name)
 		// npm packages
 		appDecPkg   string = "app-decorators@" + i.Version
 		babelCliPkg string = "babel-cli@6.24.1"
@@ -139,7 +139,7 @@ func (i Install) Install(exec exec.Execer) error {
 		return ErrNoModuleName
 	}
 
-	// Return when  "appPath" exists
+	// Return when "appPath" exists
 	if err = helper.ModuleExists(appPath); err == nil {
 		err = errors.New(fmt.Sprintf("\n"+
 			"Run: '%s' module already created\n"+

@@ -3,19 +3,23 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/util/watch"
+	"path"
 )
 
-func Server(name string, dev bool, production bool) (int8, error) {
+func Server(appPath string, dev bool, production bool, excludeDir string) error {
 
-	if name == "" {
-		return -1, errors.New("Please pass module name")
+	_, module := path.Split(appPath)
+
+	if err := helper.ModuleExists(appPath); err != nil {
+		return errors.New("Module: " + module + " does not exists!")
 	}
 
-	watcher := watch.New("node_modules")
-	watcher.Watch("./collapsible", func(file string) {
+	watcher := watch.New(excludeDir)
+	watcher.Watch(module, func(file string) {
 		fmt.Println(file)
 	})
 
-	return 1, nil
+	return nil
 }
