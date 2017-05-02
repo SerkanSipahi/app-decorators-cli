@@ -3,12 +3,12 @@ package install
 import (
 	"errors"
 	"fmt"
+	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/util/exec"
 	"github.com/serkansipahi/app-decorators-cli/util/json"
 	osx "github.com/serkansipahi/app-decorators-cli/util/os"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 )
 
@@ -56,22 +56,6 @@ func (i Install) Run() error {
 	return i.Install(
 		exec.New(false, i.Debug),
 	)
-}
-
-func (i Install) AppPathExists(appPath string) error {
-
-	_, name := path.Split(appPath)
-
-	if err := os.Chdir(appPath); err == nil {
-		err = errors.New(fmt.Sprintf("\n"+
-			"Run: '%s' already created\n"+
-			"You can delete it with 'appdec delete --name=%s\n"+
-			"", name, name))
-
-		return err
-	}
-
-	return nil
 }
 
 func (i Install) CreateAppPath(appPath string) error {
@@ -155,10 +139,13 @@ func (i Install) Install(exec exec.Execer) error {
 		return ErrNoModuleName
 	}
 
-	// Todo: create first app specific json
-
 	// Return when  "appPath" exists
-	if err = i.AppPathExists(appPath); err != nil {
+	if err = helper.ModuleExists(appPath); err == nil {
+		err = errors.New(fmt.Sprintf("\n"+
+			"Run: '%s' module already created\n"+
+			"You can delete it with 'appdec delete --name=%s\n"+
+			"", name, name),
+		)
 		return err
 	}
 
@@ -168,9 +155,6 @@ func (i Install) Install(exec exec.Execer) error {
 	}
 
 	// Install dependencies
-	// Todo: only this should be simulated, others (see above/below) can be used without
-	// mock in integration test for Install()
-
 	err = exec.Run([]string{
 		"npm init -y",
 		"npm install " + appDecPkg,

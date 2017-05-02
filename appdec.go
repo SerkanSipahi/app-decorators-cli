@@ -112,28 +112,31 @@ func main() {
 			Usage:     "server usage",
 			UsageText: "server usage text",
 			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "dev",
-					Usage: "will show debug messages",
-				},
-				cli.BoolFlag{
-					Name:  "live",
-					Usage: "force Cmd",
-				},
 				cli.StringFlag{
 					Name:  "name",
 					Value: "",
 					Usage: "set name of the app",
 				},
+				cli.BoolFlag{
+					Name:  "dev",
+					Usage: "will show debug messages",
+				},
+				cli.BoolFlag{
+					Name:  "production",
+					Usage: "force Cmd",
+				},
 			},
 			Action: func(c *cli.Context) error {
 
 				name := c.String("name")
+				dev := c.Bool("dev")
+				production := c.Bool("production")
+
 				if name == "" {
 					log.Fatalln("Failed: please pass module-name with --name=mymodule")
 				}
 
-				if _, err := Server(name); err != nil {
+				if _, err := Server(name, dev, production); err != nil {
 					log.Fatalln("Failed while Server...", err)
 				}
 

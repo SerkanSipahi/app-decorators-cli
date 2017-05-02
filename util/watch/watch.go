@@ -1,4 +1,4 @@
-package watcher
+package watch
 
 // resources/inspiration:
 // http://stackoverflow.com/questions/6608873/file-system-scanning-in-golang#6612243
@@ -15,7 +15,17 @@ import (
 	"regexp"
 )
 
-func visit(filename string, f os.FileInfo, params ...string) (error, string) {
+func New(excludeDir ...string) *Watch {
+	return &Watch{
+		ExcludeDir: excludeDir[0],
+	}
+}
+
+type Watch struct {
+	ExcludeDir string
+}
+
+func (w Watch) visit(filename string, f os.FileInfo, params ...string) (error, string) {
 
 	var excludeDir string
 	if len(params) == 1 {
@@ -33,7 +43,7 @@ func visit(filename string, f os.FileInfo, params ...string) (error, string) {
 	return nil, filename
 }
 
-func watchDir(path string, callback func(string)) {
+func (w Watch) watchDir(path string, callback func(string)) {
 
 	// create a new watcher
 	fmw := filemon.NewWatcher(func(ev *filemon.WatchEvent) {
@@ -56,7 +66,7 @@ func watchDir(path string, callback func(string)) {
 	fmw.Watch(path)
 }
 
-func Watch(dir string, callback func(string)) {
+func (w Watch) Watch(dir string, callback func(string)) {
 
 	root := filepath.Clean(dir)
 	paths := []string{}
@@ -67,7 +77,7 @@ func Watch(dir string, callback func(string)) {
 			panic(err)
 		}
 
-		if err, name = visit(name, f, "node_modules"); err == nil {
+		if err, name = w.visit(name, f, w.ExcludeDir); err == nil {
 			paths = append(paths, name)
 		}
 
@@ -80,7 +90,7 @@ func Watch(dir string, callback func(string)) {
 
 	// watch determined paths
 	for _, path := range paths {
-		go watchDir(path, callback)
+		go w.watchDir(path, callback)
 	}
 
 	// wait for kill signal
