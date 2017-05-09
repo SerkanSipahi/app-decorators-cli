@@ -1,24 +1,46 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"github.com/serkansipahi/app-decorators-cli/helper"
+	"github.com/serkansipahi/app-decorators-cli/util/exec"
 	"github.com/serkansipahi/app-decorators-cli/util/watch"
+	"log"
 	"path"
+	"path/filepath"
 )
 
 func Server(appPath string, dev bool, production bool, excludeDir string) error {
 
-	_, module := path.Split(appPath)
+	babel := filepath.Join(appPath, "node_modules", ".bin", "babel")
+	srcPath := filepath.Join(appPath, "src")
+	libPath := filepath.Join(appPath, "lib")
 
-	if err := helper.ModuleExists(appPath); err != nil {
-		return errors.New("Module: " + module + " does not exists!")
+	commander := exec.New(false, true, true)
+	err := commander.Run([]string{
+		babel + " " + srcPath + " --out-dir " + libPath,
+	})
+
+	if err != nil {
+		return err
 	}
 
 	watcher := watch.New(excludeDir)
-	watcher.Watch(module, func(file string) {
-		fmt.Println(file)
+	watcher.Watch(filepath.Join(appPath, "src"), func(file string) {
+
+		_, fileName := path.Split(file)
+		fileExt := filepath.Ext(fileName)
+		if fileExt != ".js" {
+			return
+		}
+		srcPath := filepath.Join(appPath, "src", fileName)
+		libPath := filepath.Join(appPath, "lib", fileName)
+		commander := exec.New(false, true, true)
+		err := commander.Run([]string{
+			babel + " " + srcPath + " --out-file " + libPath,
+		})
+
+		if err != nil {
+			log.Fatalln(err)
+		}
 	})
 
 	return nil

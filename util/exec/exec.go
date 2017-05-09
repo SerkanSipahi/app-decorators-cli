@@ -12,22 +12,30 @@ import (
 
 func New(opts ...bool) *Commands {
 
-	var async bool
-	var debug bool
+	var async, debug, quiet bool
 
 	if len(opts) == 1 {
 		async = opts[0]
 		debug = false
+		quiet = false
 	}
 
 	if len(opts) == 2 {
 		async = opts[0]
 		debug = opts[1]
+		quiet = false
+	}
+
+	if len(opts) == 3 {
+		async = opts[0]
+		debug = opts[1]
+		quiet = opts[2]
 	}
 
 	return &Commands{
 		Async: async,
 		Debug: debug,
+		Quiet: quiet,
 	}
 }
 
@@ -41,9 +49,13 @@ type Commands struct {
 	Commands []Command
 	Async    bool
 	Debug    bool
+	Quiet    bool
 }
 
 func (c *Commands) Run(commandsCol []string) error {
+
+	// reset collection
+	c.Commands = c.Commands[:0]
 
 	for _, commandStr := range commandsCol {
 
@@ -51,13 +63,12 @@ func (c *Commands) Run(commandsCol []string) error {
 		if len(args) == 0 {
 			log.Fatalln("Failed: empty command not allowed!")
 		}
-
 		command := &Command{
-			args[0],
-			args[1:],
-			c.Debug,
+			Name:  args[0],
+			Args:  args[1:],
+			Debug: c.Debug,
+			Quiet: c.Quiet,
 		}
-
 		c.Commands = append(c.Commands, *command)
 	}
 
@@ -77,7 +88,9 @@ func (c *Commands) RunAsync() error {
 	var wg sync.WaitGroup
 	wg.Add(len(c.Commands))
 
-	fmt.Println("Run: async")
+	if c.Quiet {
+		fmt.Println("Run: async")
+	}
 	for _, stack := range c.Commands {
 		go func(stack Command) {
 
@@ -97,7 +110,9 @@ func (c *Commands) RunAsync() error {
 
 func (c *Commands) RunSequential() error {
 
-	fmt.Println("Run: sequential")
+	if c.Quiet {
+		fmt.Println("Run: sequential")
+	}
 	for _, stack := range c.Commands {
 		err := stack.Run()
 		if err != nil {
@@ -114,6 +129,7 @@ type Command struct {
 	Name  string
 	Args  []string
 	Debug bool
+	Quiet bool
 }
 
 func (c Command) Run() error {
@@ -123,7 +139,10 @@ func (c Command) Run() error {
 func (c Command) run() error {
 
 	cmd := *exec.Command(c.Name, c.Args...)
-	fmt.Println("Run: " + c.Name + " " + strings.Join(c.Args, " "))
+
+	if c.Quiet {
+		fmt.Println("Run: " + c.Name + " " + strings.Join(c.Args, " "))
+	}
 	if c.Debug == true {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

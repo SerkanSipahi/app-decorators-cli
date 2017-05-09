@@ -15,6 +15,7 @@ import (
 var (
 	ErrNoModuleName        = errors.New("Failed: Please set module name e.g. 'appdec init --name=mymodule'")
 	ErrAppPathExists       = errors.New("Failed: Apppath exists")
+	ErrSrcPath             = errors.New("Failed: cant create src path")
 	ErrCantChangeToApppath = errors.New("Failed: cant change to apppath")
 	ErrCantInstallDeps     = errors.New("Failed: someting gone wrong while installing dependencies")
 	ErrWhileCleanup        = errors.New("Failed: someting gone wrong while cleaning")
@@ -152,6 +153,12 @@ func (i Install) Install(exec exec.Execer) error {
 	// Create "appPath" if not exists
 	if err := i.CreateAppPath(appPath); err != nil {
 		return err
+	}
+
+	// create src directory
+	srcPath := filepath.Join(appPath, "src")
+	if err = os.Mkdir(srcPath, 0755); err != nil {
+		return ErrSrcPath
 	}
 
 	// Install dependencies

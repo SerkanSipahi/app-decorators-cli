@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 )
 
-func Delete(rootPath string, module string, cliName string) (int, error) {
+func Delete(rootPath string, module string, cliName string) error {
 
 	modulePath := filepath.Join(rootPath, module)
 	moduleFile, err := os.Open(modulePath)
 	if err != nil {
-		return -1, errors.New("Failed: module '" + module + "' does not exists")
+		return errors.New("Failed: module '" + module + "' does not exists")
 	}
 	defer moduleFile.Close()
 
@@ -22,7 +22,7 @@ func Delete(rootPath string, module string, cliName string) (int, error) {
 	)
 	moduleJsonFile, err := os.Open(moduleJsonFilePath)
 	if err != nil {
-		return -1, errors.New("Failed: module '" + module + "' is not part of " + cliName + ".json")
+		return errors.New("Failed: module '" + module + "' is not part of " + cliName + ".json")
 	}
 	defer moduleJsonFile.Close()
 
@@ -31,10 +31,10 @@ func Delete(rootPath string, module string, cliName string) (int, error) {
 		filepath.Join(rootPath, module),
 	)
 	if err := os.RemoveAll(moduleDirectory); err != nil {
-		return -1, err
+		return err
 	}
 
 	fmt.Println("Run: removed " + module)
 
-	return 1, nil
+	return nil
 }

@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/install"
 	utilOs "github.com/serkansipahi/app-decorators-cli/util/os"
 	"github.com/urfave/cli"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 )
 
@@ -99,7 +101,7 @@ func main() {
 			Action: func(c *cli.Context) error {
 
 				name := c.String("name")
-				_, err := Delete(rootPath, name, CLI_NAME)
+				err := Delete(rootPath, name, CLI_NAME)
 				if err != nil {
 					log.Fatalln("Failed while deleting...", err)
 				}
@@ -138,7 +140,14 @@ func main() {
 				}
 
 				appPath := filepath.Join(rootPath, name)
-				if err := Server(appPath, dev, production, "node_modules"); err != nil {
+				_, module := path.Split(appPath)
+
+				// modules exists (appdec.json)
+				if err := helper.ModuleExists(appPath); err != nil {
+					log.Fatalln("Module: " + module + " does not exists!")
+				}
+
+				if err := Server(name, dev, production, "node_modules"); err != nil {
 					log.Fatalln("Failed while Server...", err)
 				}
 
