@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -109,7 +110,10 @@ func (i Install) CopyCoreFiles(os CopyCore) error {
 	appDecoratorPath := filepath.Clean(
 		filepath.Join(i.RootPath, i.Name, "node_modules", "app-decorators"),
 	)
-	files, _ := os.ReadFiles(appDecoratorPath)
+	files, err := os.ReadFiles(appDecoratorPath)
+	if err != nil {
+		return err
+	}
 
 	for _, file := range files {
 
@@ -128,12 +132,12 @@ func (i Install) CopyCoreFiles(os CopyCore) error {
 func (i Install) Install(exec exec.Execer) error {
 
 	var (
-		err     error
-		name    string = i.Name
-		appPath string = filepath.Join(i.RootPath, name)
-		// npm packages
-		appDecPkg   string = "app-decorators@" + i.Version
-		babelCliPkg string = "babel-cli@6.24.1"
+		err           error
+		name          string = i.Name
+		appPath       string = filepath.Join(i.RootPath, name)
+		cliDepName    string = "app-decorators-cli-deps"
+		cliDeps       string = cliDepName + "@" + i.Version
+		cliDepsString string
 	)
 
 	if name == "" {
@@ -164,8 +168,7 @@ func (i Install) Install(exec exec.Execer) error {
 	// Install dependencies
 	err = exec.Run([]string{
 		"npm init -y",
-		"npm install " + appDecPkg,
-		"npm install " + babelCliPkg,
+		"npm install " + cliDeps,
 	})
 	if err != nil {
 		return ErrCantInstallDeps
@@ -176,18 +179,48 @@ func (i Install) Install(exec exec.Execer) error {
 		return err
 	}
 
-	// Create app specific json file
-	fmt.Println("Run: create " + i.CliName + ".json...")
-	if err = i.CreateAppJson(appPath, json.New()); err != nil {
+	//prepare dependency package.json
+	cliDepsPath := filepath.Join(appPath, "node_modules", cliDepName, "appdec.json")
+	data, err := ioutil.ReadFile(cliDepsPath)
+	if err != nil {
 		return err
 	}
+	cliDepsString = string(data)
+	cliDepsString = strings.Replace(cliDepsString, "{{name}}", name, -1)
+	cliDepsString = strings.Replace(cliDepsString, "{{version}}", i.Version, -1)
+
+	appPkgJson := filepath.Join(appPath, "package.json")
+	appPkgFile, err := os.Create(appPkgJson)
+	defer appPkgFile.Close()
+	if err != nil {
+		return err
+	}
+
+	if _, err = appPkgFile.WriteString(cliDepsString); err != nil {
+		return err
+	}
+	appPkgFile.Sync()
+
+	// write into
+	// ....
+
+	// close file
+
+	// Create app specific json file
+	/*
+		fmt.Println("Run: create " + i.CliName + ".json...")
+		if err = i.CreateAppJson(appPath, json.New()); err != nil {
+			return err
+		}
+	*/
 
 	// Copy core files
-	fmt.Println("Run: create core files...")
-	if err = i.CopyCoreFiles(osx.Os{}); err != nil {
-		return err
-	}
-
+	/*
+		fmt.Println("Run: create core files...")
+		if err = i.CopyCoreFiles(osx.Os{}); err != nil {
+			return err
+		}
+	*/
 	fmt.Println("Run: done!")
 	return nil
 }
