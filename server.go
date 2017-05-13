@@ -1,22 +1,63 @@
 package main
 
 import (
-	"github.com/serkansipahi/app-decorators-cli/util/exec"
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 )
 
-func Server(appPath string, dev bool, production bool, excludeDir string) error {
+func Server(appPath string) error {
 
+	var err error
 	babel := filepath.Join(appPath, "node_modules", ".bin", "babel")
 	srcPath := filepath.Join(appPath, "src")
-	webRoot := filepath.Join(appPath, "webroot", "lib")
+	webRoot := filepath.Join(appPath, "lib")
 
-	commander := exec.New(false, true, true)
-	err := commander.Run([]string{
-		babel + " " + srcPath + " --out-dir " + webRoot + " --watch",
-	})
+	// compile file
+	babelCmd := exec.Command(
+		babel, srcPath, "--out-dir", webRoot, "--source-maps", "--watch", "--ignore", "node_modules",
+	)
+	babelCmd.Stdout = os.Stdout
+	babelCmd.Stderr = os.Stderr
+	if err = babelCmd.Start(); err != nil {
+		return err
+	}
 
-	if err != nil {
+	// start server
+	if err = os.Chdir(appPath); err != nil {
+		return errors.New("Cant change to: " + appPath)
+	}
+	serverCmd := exec.Command("node", "server.js")
+	serverCmd.Stdout = os.Stdout
+	serverCmd.Stderr = os.Stderr
+
+	if err = serverCmd.Start(); err != nil {
+		return err
+	}
+
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		sigs := <-sigs
+		if sigs.String() != "interrupt" {
+			return
+		}
+		done <- true
+	}()
+	<-done
+
+	fmt.Println("\nStop compiler")
+	if err = babelCmd.Process.Kill(); err != nil {
+		return err
+	}
+	fmt.Println("Stop server!")
+	if err = serverCmd.Process.Kill(); err != nil {
 		return err
 	}
 

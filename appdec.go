@@ -16,7 +16,7 @@ const (
 	CLI_NAME     = "appdec"
 	AUTHOR_NAME  = "Serkan Sipahi"
 	AUTHOR_EMAIL = "serkan.sipahi@yahoo.de"
-	APP_VERSION  = "0.8.217"
+	APP_VERSION  = "0.8.218"
 	COPYRIGHT    = "(c) 2017"
 )
 
@@ -120,20 +120,10 @@ func main() {
 					Value: "",
 					Usage: "set name of the app",
 				},
-				cli.BoolFlag{
-					Name:  "dev",
-					Usage: "will show debug messages",
-				},
-				cli.BoolFlag{
-					Name:  "production",
-					Usage: "force Cmd",
-				},
 			},
 			Action: func(c *cli.Context) error {
 
 				name := c.String("name")
-				dev := c.Bool("dev")
-				production := c.Bool("production")
 
 				if name == "" {
 					log.Fatalln("Failed: please pass module-name with --name=mymodule")
@@ -147,7 +137,7 @@ func main() {
 					log.Fatalln("Module: " + module + " does not exists!")
 				}
 
-				if err := Server(name, dev, production, "node_modules"); err != nil {
+				if err := Server(name); err != nil {
 					log.Fatalln("Failed while Server...", err)
 				}
 

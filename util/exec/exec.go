@@ -14,6 +14,12 @@ func New(opts ...bool) *Commands {
 
 	var async, debug, quiet bool
 
+	if len(opts) == 0 {
+		async = false
+		debug = false
+		quiet = false
+	}
+
 	if len(opts) == 1 {
 		async = opts[0]
 		debug = false

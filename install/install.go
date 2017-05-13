@@ -135,6 +135,8 @@ func (i Install) Install(exec exec.Execer) error {
 		return err
 	}
 
+	fmt.Println("Run: install...")
+
 	// Create "appPath" if not exists
 	if err := i.CreateAppPath(appPath); err != nil {
 		return err
