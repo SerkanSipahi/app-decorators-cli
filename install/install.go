@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/util/exec"
-	"github.com/serkansipahi/app-decorators-cli/util/json"
 	osx "github.com/serkansipahi/app-decorators-cli/util/os"
 	"io/ioutil"
 	"os"
@@ -67,9 +66,6 @@ func (i Install) CreateAppPath(appPath string) error {
 	if err = os.Mkdir(appPath, 0755); err != nil {
 		return ErrAppPathExists
 	}
-	if err = os.Chdir(appPath); err != nil {
-		return ErrCantChangeToApppath
-	}
 
 	return nil
 }
@@ -86,26 +82,7 @@ func (i Install) Cleanup(appPath string) error {
 	return nil
 }
 
-func (i Install) CreateAppJson(appPath string, json json.Stringifyer) error {
-
-	config := Config{
-		Name:    i.Name,
-		Version: i.Version,
-	}
-	jsonData, err := json.Stringify(config)
-	if err != nil {
-		return err
-	}
-
-	appDecJsonPath := filepath.Join(appPath, i.CliName+".json")
-	if err = ioutil.WriteFile(appDecJsonPath, jsonData, 0755); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (i Install) CopyCoreFiles(os CopyCore) error {
+func (i Install) CopyCoreFiles(os CopyCore, ignore string) error {
 
 	appDecoratorPath := filepath.Clean(
 		filepath.Join(i.RootPath, i.Name, "node_modules", "app-decorators"),
@@ -119,6 +96,10 @@ func (i Install) CopyCoreFiles(os CopyCore) error {
 
 		src := filepath.Join(appDecoratorPath, file.Name())
 		dist := filepath.Join(i.RootPath, i.Name, file.Name())
+
+		if file.Name() == ignore {
+			continue
+		}
 
 		err := os.CopyFile(src, dist)
 		if err != nil {
@@ -165,7 +146,14 @@ func (i Install) Install(exec exec.Execer) error {
 		return ErrSrcPath
 	}
 
-	// Install dependencies
+	//////////////////////////////////////////////////
+	// change directory to module dir e.g. collapsible
+	//////////////////////////////////////////////////
+	if err = os.Chdir(appPath); err != nil {
+		return errors.New("Cant change to: " + appPath)
+	}
+
+	// Get package configuration template
 	err = exec.Run([]string{
 		"npm init -y",
 		"npm install " + cliDeps,
@@ -191,7 +179,6 @@ func (i Install) Install(exec exec.Execer) error {
 
 	appPkgJson := filepath.Join(appPath, "package.json")
 	appPkgFile, err := os.Create(appPkgJson)
-	defer appPkgFile.Close()
 	if err != nil {
 		return err
 	}
@@ -200,27 +187,21 @@ func (i Install) Install(exec exec.Execer) error {
 		return err
 	}
 	appPkgFile.Sync()
+	appPkgFile.Close()
 
-	// write into
-	// ....
-
-	// close file
-
-	// Create app specific json file
-	/*
-		fmt.Println("Run: create " + i.CliName + ".json...")
-		if err = i.CreateAppJson(appPath, json.New()); err != nil {
-			return err
-		}
-	*/
+	// Install dependencies
+	err = exec.Run([]string{
+		"npm install",
+	})
+	if err != nil {
+		return err
+	}
 
 	// Copy core files
-	/*
-		fmt.Println("Run: create core files...")
-		if err = i.CopyCoreFiles(osx.Os{}); err != nil {
-			return err
-		}
-	*/
+	fmt.Println("Run: create core files...")
+	if err = i.CopyCoreFiles(osx.Os{}, "package.json"); err != nil {
+		return err
+	}
 	fmt.Println("Run: done!")
 	return nil
 }
