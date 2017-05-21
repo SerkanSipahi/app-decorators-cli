@@ -136,10 +136,11 @@ func (i Install) PrepareDepsPkg(appPath string, cliDepName string, name string) 
 	return nil
 }
 
+// @todo: refactor, to it with go templates
 func (i Install) CreateIndexTpl(appPath string, name string) error {
 
 	//load template file
-	fmt.Println("Run: create templates...")
+	fmt.Println("Run: create index.html...")
 	tplPath := filepath.Join(appPath, "html.tpl")
 	tplData, err := ioutil.ReadFile(tplPath)
 	if err != nil {
@@ -147,6 +148,35 @@ func (i Install) CreateIndexTpl(appPath string, name string) error {
 	}
 
 	indexHTMLPath := filepath.Join(appPath, "index.html")
+	indexHTMLFile, err := os.Create(indexHTMLPath)
+	if err != nil {
+		return err
+	}
+
+	tplByte := bytes.Replace(tplData, []byte("{{name}}"), []byte(name), -1)
+	if _, err = indexHTMLFile.Write(tplByte); err != nil {
+		return err
+	}
+	indexHTMLFile.Sync()
+	indexHTMLFile.Close()
+
+	return nil
+}
+
+// @todo: refactor, to it with go templates
+func (i Install) CreateComTpl(appPath string, name string) error {
+
+	name = strings.Title(name)
+
+	//load template file
+	fmt.Println("Run: create src/index.js")
+	tplPath := filepath.Join(appPath, "component.tpl")
+	tplData, err := ioutil.ReadFile(tplPath)
+	if err != nil {
+		return err
+	}
+
+	indexHTMLPath := filepath.Join(appPath, "src", "index.js")
 	indexHTMLFile, err := os.Create(indexHTMLPath)
 	if err != nil {
 		return err
@@ -244,6 +274,12 @@ func (i Install) Install(exec exec.Execer) error {
 	}
 
 	err = i.CreateIndexTpl(appPath, name)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// create src/index.js
+	err = i.CreateComTpl(appPath, name)
 	if err != nil {
 		log.Fatalln(err)
 	}
