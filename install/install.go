@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -112,82 +113,72 @@ func (i Install) CopyCoreFiles(os CopyCore, ignore string) error {
 
 func (i Install) PrepareDepsPkg(appPath string, cliDepName string, name string) error {
 
-	cliDepsPath := filepath.Join(appPath, "node_modules", cliDepName, "appdec.json")
-	tplData, err := ioutil.ReadFile(cliDepsPath)
-	if err != nil {
-		return err
-	}
+	fmt.Println("Run: create src/index.js")
+	name = strings.Title(name)
+	srcPath := filepath.Join(appPath, "node_modules", cliDepName, "appdec.json")
+	destPath := filepath.Join(appPath, "package.json")
 
-	tplData = bytes.Replace(tplData, []byte("{{name}}"), []byte(name), -1)
-	tplData = bytes.Replace(tplData, []byte("{{version}}"), []byte(i.Version), -1)
+	return i.TplFromTo(srcPath, destPath, map[string]string{
+		"{{name}}":    name,
+		"{{version}}": i.Version,
+	})
 
-	appPkgJson := filepath.Join(appPath, "package.json")
-	appPkgFile, err := os.Create(appPkgJson)
-	if err != nil {
-		return err
-	}
-
-	if _, err = appPkgFile.Write(tplData); err != nil {
-		return err
-	}
-	appPkgFile.Sync()
-	appPkgFile.Close()
-
-	return nil
 }
 
-// @todo: refactor, to it with go templates
 func (i Install) CreateIndexTpl(appPath string, name string) error {
 
-	//load template file
-	fmt.Println("Run: create index.html...")
-	tplPath := filepath.Join(appPath, "html.tpl")
-	tplData, err := ioutil.ReadFile(tplPath)
-	if err != nil {
-		return err
-	}
+	fmt.Println("Run: create index.html")
+	name = strings.Title(name)
+	srcPath := filepath.Join(appPath, "html.tpl")
+	destPath := filepath.Join(appPath, "index.html")
 
-	indexHTMLPath := filepath.Join(appPath, "index.html")
-	indexHTMLFile, err := os.Create(indexHTMLPath)
-	if err != nil {
-		return err
-	}
-
-	tplByte := bytes.Replace(tplData, []byte("{{name}}"), []byte(name), -1)
-	if _, err = indexHTMLFile.Write(tplByte); err != nil {
-		return err
-	}
-	indexHTMLFile.Sync()
-	indexHTMLFile.Close()
-
-	return nil
+	return i.TplFromTo(srcPath, destPath, map[string]string{
+		"{{name}}": name,
+	})
 }
 
-// @todo: refactor, to it with go templates
 func (i Install) CreateComTpl(appPath string, name string) error {
 
+	fmt.Println("Run: create src/index.js")
 	name = strings.Title(name)
+	srcPath := filepath.Join(appPath, "component.tpl")
+	destPath := filepath.Join(appPath, "src", "index.js")
+
+	return i.TplFromTo(srcPath, destPath, map[string]string{
+		"{{name}}": name,
+	})
+
+}
+
+func (i Install) TplFromTo(srcTplPath string, destPath string, data map[string]string) error {
 
 	//load template file
-	fmt.Println("Run: create src/index.js")
-	tplPath := filepath.Join(appPath, "component.tpl")
-	tplData, err := ioutil.ReadFile(tplPath)
+	tplData, err := ioutil.ReadFile(srcTplPath)
 	if err != nil {
 		return err
 	}
 
-	indexHTMLPath := filepath.Join(appPath, "src", "index.js")
-	indexHTMLFile, err := os.Create(indexHTMLPath)
+	destFile, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
 
-	tplByte := bytes.Replace(tplData, []byte("{{name}}"), []byte(name), -1)
-	if _, err = indexHTMLFile.Write(tplByte); err != nil {
+	var buf bytes.Buffer
+	for k, v := range data {
+		if buf.Len() == 0 {
+			buf.Write(bytes.Replace(tplData, []byte(k), []byte(v), -1))
+		} else {
+			res := buf.Bytes()
+			buf.Reset()
+			buf.Write(bytes.Replace(res, []byte(k), []byte(v), -1))
+		}
+	}
+
+	if _, err = destFile.Write(buf.Bytes()); err != nil {
 		return err
 	}
-	indexHTMLFile.Sync()
-	indexHTMLFile.Close()
+	destFile.Sync()
+	destFile.Close()
 
 	return nil
 }
