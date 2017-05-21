@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -66,7 +67,7 @@ func main() {
 			Action: func(c *cli.Context) error {
 
 				// assign passed args
-				name := c.String("name")
+				name := strings.ToLower(c.String("name"))
 				debug := c.Bool("debug")
 
 				// create installer
@@ -100,8 +101,12 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 
-				name := c.String("name")
-				err := Delete(rootPath, name, CLI_NAME)
+				name := strings.ToLower(c.String("name"))
+				if name == "" {
+					log.Fatalln("Failed: please pass module-name with --name=mymodule")
+				}
+
+				err := Delete(rootPath, name)
 				if err != nil {
 					log.Fatalln("Failed while deleting...", err)
 				}
@@ -123,7 +128,7 @@ func main() {
 			},
 			Action: func(c *cli.Context) error {
 
-				name := c.String("name")
+				name := strings.ToLower(c.String("name"))
 
 				if name == "" {
 					log.Fatalln("Failed: please pass module-name with --name=mymodule")

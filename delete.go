@@ -1,36 +1,24 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"github.com/serkansipahi/app-decorators-cli/helper"
+	"log"
 	"os"
+	"path"
 	"path/filepath"
 )
 
-func Delete(rootPath string, module string, cliName string) error {
+func Delete(rootPath string, name string) error {
 
-	modulePath := filepath.Join(rootPath, module)
-	moduleFile, err := os.Open(modulePath)
-	if err != nil {
-		return errors.New("Failed: module '" + module + "' does not exists")
+	appPath := filepath.Join(rootPath, name)
+	_, module := path.Split(appPath)
+
+	if err := helper.ModuleExists(appPath); err != nil {
+		log.Fatalln("Module: " + module + " does not exists!")
 	}
-	defer moduleFile.Close()
 
-	// module json exists
-	moduleJsonFilePath := filepath.Clean(
-		filepath.Join(rootPath, module, cliName+".json"),
-	)
-	moduleJsonFile, err := os.Open(moduleJsonFilePath)
-	if err != nil {
-		return errors.New("Failed: module '" + module + "' is not part of " + cliName + ".json")
-	}
-	defer moduleJsonFile.Close()
-
-	// remove module
-	moduleDirectory := filepath.Clean(
-		filepath.Join(rootPath, module),
-	)
-	if err := os.RemoveAll(moduleDirectory); err != nil {
+	if err := os.RemoveAll(appPath); err != nil {
 		return err
 	}
 

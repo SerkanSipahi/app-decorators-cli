@@ -34,7 +34,6 @@ func Server(appPath string) error {
 	serverCmd := exec.Command("node", "server.js")
 	serverCmd.Stdout = os.Stdout
 	serverCmd.Stderr = os.Stderr
-
 	if err = serverCmd.Start(); err != nil {
 		return err
 	}

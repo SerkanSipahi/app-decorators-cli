@@ -1,24 +1,24 @@
 package install
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/util/exec"
 	osx "github.com/serkansipahi/app-decorators-cli/util/os"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 var (
-	ErrNoModuleName        = errors.New("Failed: Please set module name e.g. 'appdec init --name=mymodule'")
-	ErrAppPathExists       = errors.New("Failed: Apppath exists")
-	ErrSrcPath             = errors.New("Failed: cant create src path")
-	ErrCantChangeToApppath = errors.New("Failed: cant change to apppath")
-	ErrCantInstallDeps     = errors.New("Failed: someting gone wrong while installing dependencies")
-	ErrWhileCleanup        = errors.New("Failed: someting gone wrong while cleaning")
+	ErrNoModuleName    = errors.New("Failed: Please set module name e.g. 'appdec init --name=mymodule'")
+	ErrAppPathExists   = errors.New("Failed: Apppath exists")
+	ErrSrcPath         = errors.New("Failed: cant create src path")
+	ErrCantInstallDeps = errors.New("Failed: someting gone wrong while installing dependencies")
+	ErrWhileCleanup    = errors.New("Failed: someting gone wrong while cleaning")
 )
 
 type Config struct {
@@ -110,15 +110,69 @@ func (i Install) CopyCoreFiles(os CopyCore, ignore string) error {
 	return nil
 }
 
+func (i Install) PrepareDepsPkg(appPath string, cliDepName string, name string) error {
+
+	cliDepsPath := filepath.Join(appPath, "node_modules", cliDepName, "appdec.json")
+	tplData, err := ioutil.ReadFile(cliDepsPath)
+	if err != nil {
+		return err
+	}
+
+	tplData = bytes.Replace(tplData, []byte("{{name}}"), []byte(name), -1)
+	tplData = bytes.Replace(tplData, []byte("{{version}}"), []byte(i.Version), -1)
+
+	appPkgJson := filepath.Join(appPath, "package.json")
+	appPkgFile, err := os.Create(appPkgJson)
+	if err != nil {
+		return err
+	}
+
+	if _, err = appPkgFile.Write(tplData); err != nil {
+		return err
+	}
+	appPkgFile.Sync()
+	appPkgFile.Close()
+
+	return nil
+}
+
+func (i Install) CreateIndexTpl(appPath string, name string) error {
+
+	//load template file
+	fmt.Println("Run: create templates...")
+	tplPath := filepath.Join(appPath, "html.tpl")
+	tplData, err := ioutil.ReadFile(tplPath)
+	if err != nil {
+		return err
+	}
+
+	indexHTMLPath := filepath.Join(appPath, "index.html")
+	indexHTMLFile, err := os.Create(indexHTMLPath)
+	if err != nil {
+		return err
+	}
+
+	tplByte := bytes.Replace(tplData, []byte("{{name}}"), []byte(name), -1)
+	if _, err = indexHTMLFile.Write(tplByte); err != nil {
+		return err
+	}
+	indexHTMLFile.Sync()
+	indexHTMLFile.Close()
+
+	return nil
+}
+
 func (i Install) Install(exec exec.Execer) error {
 
+	/**
+	 * @Todo: Implement lighthouse, too ! for measuring (use app-decorators-cli-deps)
+	 */
 	var (
-		err           error
-		name          string = i.Name
-		appPath       string = filepath.Join(i.RootPath, name)
-		cliDepName    string = "app-decorators-cli-deps"
-		cliDeps       string = cliDepName + "@" + i.Version
-		cliDepsString string
+		err        error
+		name       string = i.Name
+		appPath    string = filepath.Join(i.RootPath, name)
+		cliDepName string = "app-decorators-cli-deps"
+		cliDeps    string = cliDepName + "@" + i.Version
 	)
 
 	if name == "" {
@@ -170,28 +224,12 @@ func (i Install) Install(exec exec.Execer) error {
 	}
 
 	//prepare dependency package.json
-	cliDepsPath := filepath.Join(appPath, "node_modules", cliDepName, "appdec.json")
-	data, err := ioutil.ReadFile(cliDepsPath)
+	err = i.PrepareDepsPkg(appPath, cliDepName, name)
 	if err != nil {
-		return err
-	}
-	cliDepsString = string(data)
-	cliDepsString = strings.Replace(cliDepsString, "{{name}}", name, -1)
-	cliDepsString = strings.Replace(cliDepsString, "{{version}}", i.Version, -1)
-
-	appPkgJson := filepath.Join(appPath, "package.json")
-	appPkgFile, err := os.Create(appPkgJson)
-	if err != nil {
-		return err
+		log.Fatalln(err)
 	}
 
-	if _, err = appPkgFile.WriteString(cliDepsString); err != nil {
-		return err
-	}
-	appPkgFile.Sync()
-	appPkgFile.Close()
-
-	// Install dependencies
+	// Install prepared dependencies
 	err = exec.Run([]string{
 		"npm install",
 	})
@@ -204,6 +242,13 @@ func (i Install) Install(exec exec.Execer) error {
 	if err = i.CopyCoreFiles(osx.Os{}, "package.json"); err != nil {
 		return err
 	}
+
+	err = i.CreateIndexTpl(appPath, name)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Done
 	fmt.Println("Run: done!")
 	return nil
 }
