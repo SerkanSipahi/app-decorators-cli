@@ -5,13 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/helper"
-	"github.com/serkansipahi/app-decorators-cli/util/exec"
 	osx "github.com/serkansipahi/app-decorators-cli/util/os"
 	"io/ioutil"
+	//"log"
 	"log"
 	"os"
+	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 var (
@@ -55,9 +58,7 @@ type Install struct {
 
 func (i Install) Run() error {
 
-	return i.Install(
-		exec.New(false, i.Debug),
-	)
+	return i.Install()
 }
 
 func (i Install) CreateAppPath(appPath string) error {
@@ -113,7 +114,6 @@ func (i Install) CopyCoreFiles(os CopyCore, ignore string) error {
 
 func (i Install) PrepareDepsPkg(appPath string, cliDepName string, name string) error {
 
-	fmt.Println("Run: create src/index.js")
 	name = strings.Title(name)
 	srcPath := filepath.Join(appPath, "node_modules", cliDepName, "appdec.json")
 	destPath := filepath.Join(appPath, "package.json")
@@ -159,6 +159,7 @@ func (i Install) TplFromTo(srcTplPath string, destPath string, data map[string]s
 	}
 
 	destFile, err := os.Create(destPath)
+	defer destFile.Close()
 	if err != nil {
 		return err
 	}
@@ -178,12 +179,11 @@ func (i Install) TplFromTo(srcTplPath string, destPath string, data map[string]s
 		return err
 	}
 	destFile.Sync()
-	destFile.Close()
 
 	return nil
 }
 
-func (i Install) Install(exec exec.Execer) error {
+func (i Install) Install() error {
 
 	/**
 	 * @Todo: Implement lighthouse, too ! for measuring (use app-decorators-cli-deps)
@@ -210,7 +210,7 @@ func (i Install) Install(exec exec.Execer) error {
 		return err
 	}
 
-	fmt.Println("Run: install...")
+	println("Run: start...")
 
 	// Create "appPath" if not exists
 	if err := i.CreateAppPath(appPath); err != nil {
@@ -230,31 +230,46 @@ func (i Install) Install(exec exec.Execer) error {
 		return errors.New("Cant change to: " + appPath)
 	}
 
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+
+	npmInit1 := exec.Command("npm", "init", "-y")
+	npmInit2 := exec.Command("npm", "install", cliDeps)
+	npmInstall := exec.Command("npm", "install")
+
+	go func() {
+		<-sigs
+		npmInit1.Process.Kill()
+		npmInit2.Process.Kill()
+		npmInstall.Process.Kill()
+		if err := os.RemoveAll(appPath); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	// Get package configuration template
-	err = exec.Run([]string{
-		"npm init -y",
-		"npm install " + cliDeps,
-	})
-	if err != nil {
-		return ErrCantInstallDeps
+	if err = npmInit1.Run(); err != nil {
+		return err
 	}
 
-	// Cleanup
+	println("Run: install cli dependencies...")
+	if err = npmInit2.Run(); err != nil {
+		return err
+	}
 	if err = i.Cleanup(appPath); err != nil {
 		return err
 	}
 
 	//prepare dependency package.json
+	println("Run: prepare dependency package.json...")
 	err = i.PrepareDepsPkg(appPath, cliDepName, name)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	// Install prepared dependencies
-	err = exec.Run([]string{
-		"npm install",
-	})
-	if err != nil {
+	println("Run: install dependencies...")
+	if err = npmInstall.Run(); err != nil {
 		return err
 	}
 
@@ -277,5 +292,6 @@ func (i Install) Install(exec exec.Execer) error {
 
 	// Done
 	fmt.Println("Run: done!")
+
 	return nil
 }
