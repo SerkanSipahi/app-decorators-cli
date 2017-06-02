@@ -183,6 +183,18 @@ func (i Install) TplFromTo(srcTplPath string, destPath string, data map[string]s
 	return nil
 }
 
+func (i Install) ListenForInterrupt(sigs <-chan os.Signal, appPath string) {
+
+	<-sigs
+
+	println("Interrupt process...")
+	if err := os.RemoveAll(appPath); err != nil {
+		log.Fatalln(err)
+	}
+	log.Fatalln("Deinstall...")
+	os.Exit(1)
+}
+
 func (i Install) Install() error {
 
 	/**
@@ -230,32 +242,34 @@ func (i Install) Install() error {
 		return errors.New("Cant change to: " + appPath)
 	}
 
+	// Get package configuration template
+	npmInit1 := exec.Command("npm", "init", "-y")
+	npmInit1.Stdout = os.Stdout
+	npmInit1.Stderr = os.Stderr
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
-	npmInit1 := exec.Command("npm", "init", "-y")
-	npmInit2 := exec.Command("npm", "install", cliDeps)
-	npmInstall := exec.Command("npm", "install")
+	// on interrup graceful shutdown
+	go i.ListenForInterrupt(sigs, appPath)
 
-	go func() {
-		<-sigs
-		npmInit1.Process.Kill()
-		npmInit2.Process.Kill()
-		npmInstall.Process.Kill()
-		if err := os.RemoveAll(appPath); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	// Get package configuration template
 	if err = npmInit1.Run(); err != nil {
 		return err
 	}
 
+	//////////////////////////////////////////
+	//////////////////////////////////////////
+
 	println("Run: install cli dependencies...")
+	npmInit2 := exec.Command("npm", "install", cliDeps)
+	npmInit2.Stdout = os.Stdout
+	npmInit2.Stderr = os.Stderr
+
 	if err = npmInit2.Run(); err != nil {
 		return err
 	}
+
+	// remove package.json
 	if err = i.Cleanup(appPath); err != nil {
 		return err
 	}
@@ -269,6 +283,10 @@ func (i Install) Install() error {
 
 	// Install prepared dependencies
 	println("Run: install dependencies...")
+	npmInstall := exec.Command("npm", "install")
+	npmInstall.Stdout = os.Stdout
+	npmInstall.Stderr = os.Stderr
+
 	if err = npmInstall.Run(); err != nil {
 		return err
 	}

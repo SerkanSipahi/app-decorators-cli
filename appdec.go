@@ -150,16 +150,6 @@ func main() {
 			},
 		},
 		{
-			Name:      "list",
-			Aliases:   []string{"l"},
-			Usage:     "list usage",
-			UsageText: "list usage text",
-			Action: func(c *cli.Context) error {
-				fmt.Println("list all modules")
-				return nil
-			},
-		},
-		{
 			Name:      "bundle",
 			Aliases:   []string{"b"},
 			Usage:     "bundle usage",
@@ -175,7 +165,42 @@ func main() {
 				},
 			},
 			Action: func(c *cli.Context) error {
+				// Fixme: erzeugt z.B. in collapsible /lib für npm
 				fmt.Println("completed task: ", c.Args().First())
+				return nil
+			},
+		},
+		{
+			Name:      "list",
+			Aliases:   []string{"l"},
+			Usage:     "list usage",
+			UsageText: "list usage text",
+			Action: func(c *cli.Context) error {
+				fmt.Println("list all modules")
+				return nil
+			},
+		},
+		{
+			Name:      "install",
+			Aliases:   []string{"l"},
+			Usage:     "install usage",
+			UsageText: "install usage text",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "name",
+					Usage: "name of module",
+				},
+			},
+			Action: func(c *cli.Context) error {
+
+				// When installing an existing app-dec or vendor module
+				// it will store the name of module and the type(existing or vendor)
+				// in a file. This is important if we make a bundle/codesplitting
+				// for current developed module.
+
+				// Some other ideas:
+				//
+				fmt.Println("list existing app-dec or vendor module")
 				return nil
 			},
 		},
