@@ -7,7 +7,6 @@ import (
 	"github.com/serkansipahi/app-decorators-cli/helper"
 	osx "github.com/serkansipahi/app-decorators-cli/util/os"
 	"io/ioutil"
-	//"log"
 	"log"
 	"os"
 	"os/exec"
@@ -183,23 +182,8 @@ func (i Install) TplFromTo(srcTplPath string, destPath string, data map[string]s
 	return nil
 }
 
-func (i Install) ListenForInterrupt(sigs <-chan os.Signal, appPath string) {
-
-	<-sigs
-
-	println("Interrupt process...")
-	if err := os.RemoveAll(appPath); err != nil {
-		log.Fatalln(err)
-	}
-	log.Fatalln("Deinstall...")
-	os.Exit(1)
-}
-
 func (i Install) Install() error {
 
-	/**
-	 * @Todo: Implement lighthouse, too ! for measuring (use app-decorators-cli-deps)
-	 */
 	var (
 		err        error
 		name       string = i.Name
@@ -207,6 +191,8 @@ func (i Install) Install() error {
 		cliDepName string = "app-decorators-cli-deps"
 		cliDeps    string = cliDepName + "@" + i.Version
 	)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
 	if name == "" {
 		return ErrNoModuleName
@@ -244,17 +230,21 @@ func (i Install) Install() error {
 
 	// Get package configuration template
 	npmInit1 := exec.Command("npm", "init", "-y")
-	npmInit1.Stdout = os.Stdout
-	npmInit1.Stderr = os.Stderr
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
-
-	// on interrup graceful shutdown
-	go i.ListenForInterrupt(sigs, appPath)
-
-	if err = npmInit1.Run(); err != nil {
-		return err
+	if i.Debug {
+		npmInit1.Stdout = os.Stdout
+		npmInit1.Stderr = os.Stderr
+	}
+	npmInit1.Run()
+	status := npmInit1.ProcessState.Sys().(syscall.WaitStatus)
+	exitStatus := status.ExitStatus()
+	if exitStatus == -1 {
+		if err := os.RemoveAll(appPath); err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println("Stopped: installing...")
+		close(sigs)
+		os.Exit(1)
+		return nil
 	}
 
 	//////////////////////////////////////////
@@ -262,11 +252,21 @@ func (i Install) Install() error {
 
 	println("Run: install cli dependencies...")
 	npmInit2 := exec.Command("npm", "install", cliDeps)
-	npmInit2.Stdout = os.Stdout
-	npmInit2.Stderr = os.Stderr
-
-	if err = npmInit2.Run(); err != nil {
-		return err
+	if i.Debug {
+		npmInit2.Stdout = os.Stdout
+		npmInit2.Stderr = os.Stderr
+	}
+	npmInit2.Run()
+	status = npmInit2.ProcessState.Sys().(syscall.WaitStatus)
+	exitStatus = status.ExitStatus()
+	if exitStatus == -1 {
+		if err := os.RemoveAll(appPath); err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println("Stopped: installing...")
+		close(sigs)
+		os.Exit(1)
+		return nil
 	}
 
 	// remove package.json
@@ -284,11 +284,21 @@ func (i Install) Install() error {
 	// Install prepared dependencies
 	println("Run: install dependencies...")
 	npmInstall := exec.Command("npm", "install")
-	npmInstall.Stdout = os.Stdout
-	npmInstall.Stderr = os.Stderr
-
-	if err = npmInstall.Run(); err != nil {
-		return err
+	if i.Debug {
+		npmInstall.Stdout = os.Stdout
+		npmInstall.Stderr = os.Stderr
+	}
+	npmInstall.Run()
+	status = npmInstall.ProcessState.Sys().(syscall.WaitStatus)
+	exitStatus = status.ExitStatus()
+	if exitStatus == -1 {
+		if err := os.RemoveAll(appPath); err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println("Stopped: installing...")
+		close(sigs)
+		os.Exit(1)
+		return nil
 	}
 
 	// Copy core files
@@ -310,6 +320,7 @@ func (i Install) Install() error {
 
 	// Done
 	fmt.Println("Run: done!")
+	close(sigs)
 
 	return nil
 }
