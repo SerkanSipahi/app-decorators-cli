@@ -34,6 +34,25 @@ type CopyCore interface {
 	osx.CopyFiler
 }
 
+func NpmRun(cmd *exec.Cmd, sigs chan<- os.Signal, appPath string, debug bool) {
+
+	if debug {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	cmd.Run()
+	status := cmd.ProcessState.Sys().(syscall.WaitStatus)
+	exitStatus := status.ExitStatus()
+	if exitStatus == -1 {
+		if err := os.RemoveAll(appPath); err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println("Stopped: installing...")
+		close(sigs)
+		os.Exit(1)
+	}
+}
+
 func New(name string, rootPath string, version string, cliName string, debug bool) *Install {
 
 	return &Install{
@@ -229,45 +248,21 @@ func (i Install) Install() error {
 	}
 
 	// Get package configuration template
-	npmInit1 := exec.Command("npm", "init", "-y")
-	if i.Debug {
-		npmInit1.Stdout = os.Stdout
-		npmInit1.Stderr = os.Stderr
-	}
-	npmInit1.Run()
-	status := npmInit1.ProcessState.Sys().(syscall.WaitStatus)
-	exitStatus := status.ExitStatus()
-	if exitStatus == -1 {
-		if err := os.RemoveAll(appPath); err != nil {
-			log.Fatalln(err)
-		}
-		fmt.Println("Stopped: installing...")
-		close(sigs)
-		os.Exit(1)
-		return nil
-	}
-
-	//////////////////////////////////////////
-	//////////////////////////////////////////
+	println("Run: init package.json...")
+	NpmRun(
+		exec.Command("npm", "init", "-y"),
+		sigs,
+		appPath,
+		i.Debug,
+	)
 
 	println("Run: install cli dependencies...")
-	npmInit2 := exec.Command("npm", "install", cliDeps)
-	if i.Debug {
-		npmInit2.Stdout = os.Stdout
-		npmInit2.Stderr = os.Stderr
-	}
-	npmInit2.Run()
-	status = npmInit2.ProcessState.Sys().(syscall.WaitStatus)
-	exitStatus = status.ExitStatus()
-	if exitStatus == -1 {
-		if err := os.RemoveAll(appPath); err != nil {
-			log.Fatalln(err)
-		}
-		fmt.Println("Stopped: installing...")
-		close(sigs)
-		os.Exit(1)
-		return nil
-	}
+	NpmRun(
+		exec.Command("npm", "install", cliDeps),
+		sigs,
+		appPath,
+		i.Debug,
+	)
 
 	// remove package.json
 	if err = i.Cleanup(appPath); err != nil {
@@ -283,23 +278,12 @@ func (i Install) Install() error {
 
 	// Install prepared dependencies
 	println("Run: install dependencies...")
-	npmInstall := exec.Command("npm", "install")
-	if i.Debug {
-		npmInstall.Stdout = os.Stdout
-		npmInstall.Stderr = os.Stderr
-	}
-	npmInstall.Run()
-	status = npmInstall.ProcessState.Sys().(syscall.WaitStatus)
-	exitStatus = status.ExitStatus()
-	if exitStatus == -1 {
-		if err := os.RemoveAll(appPath); err != nil {
-			log.Fatalln(err)
-		}
-		fmt.Println("Stopped: installing...")
-		close(sigs)
-		os.Exit(1)
-		return nil
-	}
+	NpmRun(
+		exec.Command("npm", "install"),
+		sigs,
+		appPath,
+		i.Debug,
+	)
 
 	// Copy core files
 	fmt.Println("Run: create core files...")
