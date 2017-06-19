@@ -10,7 +10,7 @@ import (
 	"syscall"
 )
 
-func Server(appPath string) error {
+func Server(appPath string, compile bool) error {
 
 	var err error
 	babel := filepath.Join(appPath, "node_modules", ".bin", "babel")
@@ -21,10 +21,12 @@ func Server(appPath string) error {
 	babelCmd := exec.Command(
 		babel, srcPath, "--out-dir", webRoot, "--source-maps", "--watch", "--ignore", "node_modules",
 	)
-	babelCmd.Stdout = os.Stdout
-	babelCmd.Stderr = os.Stderr
-	if err = babelCmd.Start(); err != nil {
-		return err
+	if compile {
+		babelCmd.Stdout = os.Stdout
+		babelCmd.Stderr = os.Stderr
+		if err = babelCmd.Start(); err != nil {
+			return err
+		}
 	}
 
 	// start server
@@ -51,9 +53,11 @@ func Server(appPath string) error {
 	}()
 	<-done
 
-	fmt.Println("\nStop compiler")
-	if err = babelCmd.Process.Kill(); err != nil {
-		return err
+	if compile {
+		fmt.Println("\nStop compiler")
+		if err = babelCmd.Process.Kill(); err != nil {
+			return err
+		}
 	}
 	fmt.Println("Stop server!")
 	if err = serverCmd.Process.Kill(); err != nil {

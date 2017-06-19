@@ -134,10 +134,15 @@ func main() {
 					Value: "",
 					Usage: "will start any defined browser",
 				},
+				cli.BoolFlag{
+					Name:  "compile",
+					Usage: "will compile files before start server",
+				},
 			},
 			Action: func(c *cli.Context) error {
 
 				name := strings.ToLower(c.String("name"))
+				compile := c.Bool("compile")
 
 				if name == "" {
 					log.Fatalln("Failed: please pass module-name with --name=mymodule")
@@ -151,7 +156,7 @@ func main() {
 					log.Fatalln("Module: " + module + " does not exists!")
 				}
 
-				if err := Server(name); err != nil {
+				if err := Server(name, compile); err != nil {
 					log.Fatalln("Failed while Server...", err)
 				}
 
