@@ -17,7 +17,7 @@ const (
 	CLI_NAME     = "appdec"
 	AUTHOR_NAME  = "Serkan Sipahi"
 	AUTHOR_EMAIL = "serkan.sipahi@yahoo.de"
-	APP_VERSION  = "0.8.218"
+	APP_VERSION  = "0.8.221"
 	COPYRIGHT    = "(c) 2017"
 )
 
@@ -32,7 +32,6 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed while getting root path")
 	}
-
 	app := cli.NewApp()
 	app.Name = CLI_NAME
 	app.Version = APP_VERSION
@@ -62,6 +61,11 @@ func main() {
 				cli.BoolFlag{
 					Name:  "debug",
 					Usage: "will show debug messages",
+				},
+				cli.IntFlag{
+					Name:  "timeout",
+					Value: 60000,
+					Usage: "set timeout",
 				},
 			},
 			Action: func(c *cli.Context) error {
@@ -125,6 +129,11 @@ func main() {
 					Value: "",
 					Usage: "set name of the app",
 				},
+				cli.StringFlag{
+					Name:  "browser",
+					Value: "",
+					Usage: "will start any defined browser",
+				},
 			},
 			Action: func(c *cli.Context) error {
 
@@ -155,18 +164,39 @@ func main() {
 			Usage:     "bundle usage",
 			UsageText: "bundle usage text",
 			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "dev",
-					Usage: "will show debug messages",
+				cli.StringFlag{
+					Name:  "name",
+					Value: "",
+					Usage: "set name of the app",
 				},
-				cli.BoolFlag{
-					Name:  "production",
-					Usage: "production Cmd",
+				cli.StringFlag{
+					Name:  "compile-for",
+					Value: "all",
+					Usage: "",
 				},
 			},
 			Action: func(c *cli.Context) error {
-				// Fixme: erzeugt z.B. in collapsible /lib für npm
-				fmt.Println("completed task: ", c.Args().First())
+
+				// idea: bundle per route
+
+				name := strings.ToLower(c.String("name"))
+
+				if name == "" {
+					log.Fatalln("Failed: please pass module-name with --name=mymodule")
+				}
+
+				appPath := filepath.Join(rootPath, name)
+				_, module := path.Split(appPath)
+
+				// modules exists (appdec.json)
+				if err := helper.ModuleExists(appPath); err != nil {
+					log.Fatalln("Module: " + module + " does not exists!")
+				}
+
+				err := bundle(name)
+				if err != nil {
+					log.Fatalln("Failed while bundling...", err)
+				}
 				return nil
 			},
 		},

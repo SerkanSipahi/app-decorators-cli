@@ -17,11 +17,10 @@ import (
 )
 
 var (
-	ErrNoModuleName    = errors.New("Failed: Please set module name e.g. 'appdec init --name=mymodule'")
-	ErrAppPathExists   = errors.New("Failed: Apppath exists")
-	ErrSrcPath         = errors.New("Failed: cant create src path")
-	ErrCantInstallDeps = errors.New("Failed: someting gone wrong while installing dependencies")
-	ErrWhileCleanup    = errors.New("Failed: someting gone wrong while cleaning")
+	ErrNoModuleName  = errors.New("Failed: Please set module name e.g. 'appdec init --name=mymodule'")
+	ErrAppPathExists = errors.New("Failed: Apppath exists")
+	ErrSrcPath       = errors.New("Failed: cant create src path")
+	ErrWhileCleanup  = errors.New("Failed: someting gone wrong while cleaning")
 )
 
 type Config struct {
@@ -47,7 +46,7 @@ func NpmRun(cmd *exec.Cmd, sigs chan<- os.Signal, appPath string, debug bool) {
 		if err := os.RemoveAll(appPath); err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Println("Stopped: installing...")
+		fmt.Println("\nStopped: installing...")
 		close(sigs)
 		os.Exit(1)
 	}
@@ -146,7 +145,6 @@ func (i Install) PrepareDepsPkg(appPath string, cliDepName string, name string) 
 func (i Install) CreateIndexTpl(appPath string, name string) error {
 
 	fmt.Println("Run: create index.html")
-	name = strings.Title(name)
 	srcPath := filepath.Join(appPath, "html.tpl")
 	destPath := filepath.Join(appPath, "index.html")
 
@@ -291,6 +289,7 @@ func (i Install) Install() error {
 		return err
 	}
 
+	// create index.html
 	err = i.CreateIndexTpl(appPath, name)
 	if err != nil {
 		log.Fatalln(err)
