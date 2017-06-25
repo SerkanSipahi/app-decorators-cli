@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/install"
+	"github.com/serkansipahi/app-decorators-cli/options"
 	utilOs "github.com/serkansipahi/app-decorators-cli/util/os"
 	"github.com/urfave/cli"
 	"log"
@@ -34,6 +35,7 @@ func main() {
 	}
 	app := cli.NewApp()
 	app.Name = CLI_NAME
+	app.Usage = "command line tool"
 	app.Version = APP_VERSION
 	app.Copyright = COPYRIGHT + " " + CLI_NAME
 	app.Authors = []cli.Author{
@@ -48,25 +50,12 @@ func main() {
 	 */
 	app.Commands = []cli.Command{
 		{
-			Name:      "init",
-			Aliases:   []string{"i"},
-			Usage:     "init usage",
-			UsageText: "init usage text",
+			Name:    "create",
+			Aliases: []string{"i"},
+			Usage:   "create new component",
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "name",
-					Value: "",
-					Usage: "set name of the app",
-				},
-				cli.BoolFlag{
-					Name:  "debug",
-					Usage: "will show debug messages",
-				},
-				cli.IntFlag{
-					Name:  "timeout",
-					Value: 60000,
-					Usage: "set timeout",
-				},
+				options.Name,
+				options.Debug,
 			},
 			Action: func(c *cli.Context) error {
 
@@ -92,20 +81,29 @@ func main() {
 			},
 		},
 		{
-			Name:      "delete",
-			Aliases:   []string{"d"},
-			Usage:     "delete module",
-			UsageText: "delete usage text",
+			Name:    "recreate",
+			Aliases: []string{"i"},
+			Usage:   "reinit an existing component (without deleting ./src files)",
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "name",
-					Value: "",
-					Usage: "set name of the app",
-				},
+				options.Name,
+				options.Debug,
+			},
+			Action: func(c *cli.Context) error {
+
+				return nil
+			},
+		},
+		{
+			Name:    "delete",
+			Aliases: []string{"d"},
+			Usage:   "delete existing component",
+			Flags: []cli.Flag{
+				options.Name,
 			},
 			Action: func(c *cli.Context) error {
 
 				name := strings.ToLower(c.String("name"))
+
 				if name == "" {
 					log.Fatalln("Failed: please pass module-name with --name=mymodule")
 				}
@@ -118,31 +116,75 @@ func main() {
 				return nil
 			},
 		},
+
 		{
-			Name:      "server",
-			Aliases:   []string{"s"},
-			Usage:     "server usage",
-			UsageText: "server usage text",
+			Name:    "run",
+			Aliases: []string{"s"},
+			Usage:   "starting server",
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "name",
-					Value: "",
-					Usage: "set name of the app",
-				},
-				cli.StringFlag{
-					Name:  "browser",
-					Value: "",
-					Usage: "will start any defined browser",
-				},
-				cli.BoolFlag{
-					Name:  "compile",
-					Usage: "will compile files before start server",
-				},
+				options.Name,
+				options.Debug,
+				options.Browser,
+				options.Watch,
+				options.Format,
+				options.Server,
+				options.Dev,
+				options.Production,
+				options.Timeout,
+				options.SourceMaps,
+				options.Minify,
+			},
+			Action: func(c *cli.Context) error {
+
+				var (
+					name       = strings.ToLower(c.String("name"))
+					timeout    = c.Int("timeout")
+					port       = c.Int("port")
+					debug      = c.Bool("debug")
+					browser    = c.String("browser")
+					watch      = c.Bool("watch")
+					format     = c.String("format")
+					server     = c.String("server")
+					dev        = c.String("dev")
+					production = c.String("production")
+					SourceMaps = c.Bool("source-maps")
+					Minify     = c.Bool("minify")
+				)
+
+				fmt.Println("options: ", name, timeout, port, debug, browser, watch, format, server, dev, production, SourceMaps, Minify)
+
+				if name == "" {
+					log.Fatalln("Failed: please pass component name e.g. --name=component")
+				}
+
+				appPath := filepath.Join(rootPath, name)
+				_, module := path.Split(appPath)
+
+				// check if component exists (appdec.json)
+				if err := helper.ModuleExists(appPath); err != nil {
+					log.Fatalln("Component: " + module + " does not exists!")
+				}
+
+				return nil
+			},
+		},
+
+		{
+			Name:    "server",
+			Aliases: []string{"s"},
+			Usage:   "starting server",
+			Flags: []cli.Flag{
+				options.Name,
+				options.Debug,
+				options.Browser,
+				options.Watch,
+				options.Format,
+				options.Dev,
+				options.Production,
 			},
 			Action: func(c *cli.Context) error {
 
 				name := strings.ToLower(c.String("name"))
-				compile := c.Bool("compile")
 
 				if name == "" {
 					log.Fatalln("Failed: please pass module-name with --name=mymodule")
@@ -156,7 +198,7 @@ func main() {
 					log.Fatalln("Module: " + module + " does not exists!")
 				}
 
-				if err := Server(name, compile); err != nil {
+				if err := Server(name, true); err != nil {
 					log.Fatalln("Failed while Server...", err)
 				}
 
@@ -164,25 +206,18 @@ func main() {
 			},
 		},
 		{
-			Name:      "bundle",
-			Aliases:   []string{"b"},
-			Usage:     "bundle usage",
-			UsageText: "bundle usage text",
+			Name:    "build",
+			Aliases: []string{"b"},
+			Usage:   "build component",
 			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "name",
-					Value: "",
-					Usage: "set name of the app",
-				},
-				cli.StringFlag{
-					Name:  "compile-for",
-					Value: "all",
-					Usage: "",
-				},
+				options.Name,
+				options.Debug,
+				options.Browser,
+				options.Server,
+				options.Watch,
+				options.Format,
 			},
 			Action: func(c *cli.Context) error {
-
-				// idea: bundle per route
 
 				name := strings.ToLower(c.String("name"))
 
@@ -206,25 +241,45 @@ func main() {
 			},
 		},
 		{
-			Name:      "list",
-			Aliases:   []string{"l"},
-			Usage:     "list usage",
-			UsageText: "list usage text",
+			Name:    "test",
+			Aliases: []string{"l"},
+			Usage:   "list usage",
+			Flags: []cli.Flag{
+				options.Name,
+			},
+			Action: func(c *cli.Context) error {
+				fmt.Println("test component")
+				return nil
+			},
+		},
+		{
+			Name:    "publish",
+			Aliases: []string{"l"},
+			Usage:   "publish component on npm",
+			Flags: []cli.Flag{
+				options.Name,
+			},
+			Action: func(c *cli.Context) error {
+				// use lerna (internal)
+				fmt.Println("publish component")
+				return nil
+			},
+		},
+		{
+			Name:    "list",
+			Aliases: []string{"l"},
+			Usage:   "list all available modules of app-decorators",
 			Action: func(c *cli.Context) error {
 				fmt.Println("list all modules")
 				return nil
 			},
 		},
 		{
-			Name:      "install",
-			Aliases:   []string{"l"},
-			Usage:     "install usage",
-			UsageText: "install usage text",
+			Name:    "install",
+			Aliases: []string{"l"},
+			Usage:   "install usage",
 			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "name",
-					Usage: "name of module",
-				},
+				options.Name,
 			},
 			Action: func(c *cli.Context) error {
 
