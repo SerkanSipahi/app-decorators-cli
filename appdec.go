@@ -94,7 +94,7 @@ func main() {
 		*/
 		{
 			Name:    "run",
-			Aliases: []string{"s"},
+			Aliases: []string{"r"},
 			Usage:   "starting workflow",
 			Flags: []cli.Flag{
 				options.Name,
