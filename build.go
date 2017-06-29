@@ -6,13 +6,12 @@ import (
 	"path/filepath"
 )
 
-func build(src string, dist string, format string, minify bool, noMangle bool) error {
+func build(src string, dist string, format string, minify bool, noMangle bool, debug bool) *exec.Cmd {
 
 	var (
-		err      error
 		commands []string
 		jspm     string = filepath.Join("node_modules", ".bin", "jspm")
-		jspmCmd  *exec.Cmd
+		cmd      *exec.Cmd
 	)
 
 	commands = BuildOptions(BuildOptionsConfig{
@@ -24,14 +23,11 @@ func build(src string, dist string, format string, minify bool, noMangle bool) e
 		Minify:   minify,
 	})
 
-	jspmCmd = exec.Command(jspm, commands...)
-	jspmCmd.Stdout = os.Stdout
-	jspmCmd.Stderr = os.Stderr
-
-	err = jspmCmd.Run()
-	if err != nil {
-		return err
+	cmd = exec.Command(jspm, commands...)
+	if debug {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 	}
 
-	return nil
+	return cmd
 }

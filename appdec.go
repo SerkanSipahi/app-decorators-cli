@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/install"
 	"github.com/serkansipahi/app-decorators-cli/options"
@@ -9,8 +8,6 @@ import (
 	"github.com/urfave/cli"
 	"log"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
 )
 
@@ -51,7 +48,7 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:    "create",
-			Aliases: []string{"i"},
+			Aliases: []string{"c"},
 			Usage:   "create new component",
 			Flags: []cli.Flag{
 				options.Name,
@@ -76,19 +73,6 @@ func main() {
 				if err := installer.Run(); err != nil {
 					log.Fatalln("Failed while installing...", err)
 				}
-
-				return nil
-			},
-		},
-		{
-			Name:    "recreate",
-			Aliases: []string{"i"},
-			Usage:   "reinit an existing component (without deleting ./src files)",
-			Flags: []cli.Flag{
-				options.Name,
-				options.Debug,
-			},
-			Action: func(c *cli.Context) error {
 
 				return nil
 			},
@@ -120,177 +104,68 @@ func main() {
 		{
 			Name:    "run",
 			Aliases: []string{"s"},
-			Usage:   "starting server",
+			Usage:   "starting workflow",
 			Flags: []cli.Flag{
 				options.Name,
-				options.Debug,
 				options.Browser,
 				options.Watch,
-				options.Format,
 				options.Server,
-				options.Dev,
 				options.Production,
-				options.Timeout,
-				options.SourceMaps,
 				options.Minify,
+				//options.Format,
+				//options.Port,
 			},
 			Action: func(c *cli.Context) error {
 
 				var (
 					name       = strings.ToLower(c.String("name"))
-					timeout    = c.Int("timeout")
-					port       = c.Int("port")
-					debug      = c.Bool("debug")
-					browser    = c.String("browser")
 					watch      = c.Bool("watch")
-					format     = c.String("format")
-					server     = c.String("server")
-					dev        = c.String("dev")
-					production = c.String("production")
-					SourceMaps = c.Bool("source-maps")
-					Minify     = c.Bool("minify")
+					format     = "default"
+					server     = c.Bool("server")
+					production = c.Bool("production")
+					minify     = c.Bool("minify")
+					//format   = c.String("format")
+					//port     = c.String("port")
 				)
 
-				fmt.Println("options: ", name, timeout, port, debug, browser, watch, format, server, dev, production, SourceMaps, Minify)
-
 				if name == "" {
-					log.Fatalln("Failed: please pass component name e.g. --name=component")
+					log.Fatalln("\nFailed: please pass component name e.g. --name=component")
 				}
 
-				appPath := filepath.Join(rootPath, name)
-				_, module := path.Split(appPath)
-
-				// check if component exists (appdec.json)
-				if err := helper.ModuleExists(appPath); err != nil {
-					log.Fatalln("Component: " + module + " does not exists!")
+				// component has appdec.json
+				if err := helper.ModuleExists(name); err != nil {
+					log.Fatalln("\nComponent: " + name + " does not exists!")
 				}
 
-				return nil
-			},
-		},
-
-		{
-			Name:    "server",
-			Aliases: []string{"s"},
-			Usage:   "starting server",
-			Flags: []cli.Flag{
-				options.Name,
-				options.Debug,
-				options.Browser,
-				options.Watch,
-				options.Format,
-				options.Dev,
-				options.Production,
-			},
-			Action: func(c *cli.Context) error {
-
-				name := strings.ToLower(c.String("name"))
-
-				if name == "" {
-					log.Fatalln("Failed: please pass module-name with --name=mymodule")
+				// change to component directory
+				if err = os.Chdir(name); err != nil {
+					log.Fatalln("\nCant change to: "+name, err)
 				}
 
-				appPath := filepath.Join(rootPath, name)
-				_, module := path.Split(appPath)
+				// compile files
+				cmdCompile := compile("src", "lib", watch, func() {
 
-				// modules exists (appdec.json)
-				if err := helper.ModuleExists(appPath); err != nil {
-					log.Fatalln("Module: " + module + " does not exists!")
-				}
+					if !production {
+						return
+					}
 
-				if err := Server(name, true); err != nil {
-					log.Fatalln("Failed while Server...", err)
-				}
+					cmdBuild := build("src/index.js", "lib/index.js", format, minify, true, true)
+					err = cmdBuild.Run()
+					if err != nil {
+						log.Fatalln(err)
+					}
 
-				return nil
-			},
-		},
-		{
-			Name:    "build",
-			Aliases: []string{"b"},
-			Usage:   "build component",
-			Flags: []cli.Flag{
-				options.Name,
-				options.Debug,
-				options.Browser,
-				options.Server,
-				options.Watch,
-				options.Format,
-			},
-			Action: func(c *cli.Context) error {
+				})
 
-				name := strings.ToLower(c.String("name"))
-
-				if name == "" {
-					log.Fatalln("Failed: please pass module-name with --name=mymodule")
-				}
-
-				appPath := filepath.Join(rootPath, name)
-				_, module := path.Split(appPath)
-
-				// modules exists (appdec.json)
-				if err := helper.ModuleExists(appPath); err != nil {
-					log.Fatalln("Module: " + module + " does not exists!")
-				}
-
-				err := bundle(name)
+				err = cmdCompile.Run()
 				if err != nil {
-					log.Fatalln("Failed while bundling...", err)
+					log.Fatalln(err)
 				}
-				return nil
-			},
-		},
-		{
-			Name:    "test",
-			Aliases: []string{"l"},
-			Usage:   "list usage",
-			Flags: []cli.Flag{
-				options.Name,
-			},
-			Action: func(c *cli.Context) error {
-				fmt.Println("test component")
-				return nil
-			},
-		},
-		{
-			Name:    "publish",
-			Aliases: []string{"l"},
-			Usage:   "publish component on npm",
-			Flags: []cli.Flag{
-				options.Name,
-			},
-			Action: func(c *cli.Context) error {
-				// use lerna (internal)
-				fmt.Println("publish component")
-				return nil
-			},
-		},
-		{
-			Name:    "list",
-			Aliases: []string{"l"},
-			Usage:   "list all available modules of app-decorators",
-			Action: func(c *cli.Context) error {
-				fmt.Println("list all modules")
-				return nil
-			},
-		},
-		{
-			Name:    "install",
-			Aliases: []string{"l"},
-			Usage:   "install usage",
-			Flags: []cli.Flag{
-				options.Name,
-			},
-			Action: func(c *cli.Context) error {
 
-				// When installing an existing app-dec or vendor module
-				// it will store the name of module and the type(existing or vendor)
-				// in a file. This is important if we make a bundle/codesplitting
-				// for current developed module.
+				if server {
+					webserver("3000")
+				}
 
-				// Some other ideas:
-				//
-				fmt.Println("list existing app-dec or vendor module")
 				return nil
 			},
 		},

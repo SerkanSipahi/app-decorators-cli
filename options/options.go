@@ -15,10 +15,10 @@ var (
 		Value: 60000,
 		Usage: "set timeout",
 	}
-	Port = cli.IntFlag{
+	Port = cli.StringFlag{
 		Name:  "port",
-		Value: 3000,
-		Usage: "set timeout",
+		Value: "3000",
+		Usage: "set port",
 	}
 	Debug = cli.BoolFlag{
 		Name:  "debug",
@@ -38,27 +38,21 @@ var (
 		Value: "default",
 		Usage: "define component format (amd|cjs|umd|esm)",
 	}
-	Server = cli.StringFlag{
+	Server = cli.BoolFlag{
 		Name:  "server",
 		Usage: "start server",
-		Value: "dev",
 	}
-	Dev = cli.StringFlag{
-		Name:  "dev",
-		Usage: "set dev environment",
-		Value: "all",
-	}
-	Production = cli.StringFlag{
+	Production = cli.BoolFlag{
 		Name:  "production",
 		Usage: "set production environment",
-		Value: "all",
-	}
-	SourceMaps = cli.BoolFlag{
-		Name:  "source-maps",
-		Usage: "will generate source-maps",
 	}
 	Minify = cli.BoolFlag{
 		Name:  "minify",
 		Usage: "will minify code",
+	}
+	CompileFor = cli.StringFlag{
+		// babel-preset-env autoprefixer
+		Name:  "compile-for",
+		Usage: "compile for",
 	}
 )
