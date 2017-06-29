@@ -77,43 +77,34 @@ func main() {
 				return nil
 			},
 		},
-		{
-			Name:    "delete",
-			Aliases: []string{"d"},
-			Usage:   "delete existing component",
-			Flags: []cli.Flag{
-				options.Name,
+		/*
+			{
+				Name:    "recreate",
+				Aliases: []string{"rc"},
+				Usage:   "reinit an existing component (without deleting ./src files)",
+				Flags: []cli.Flag{
+					options.Name,
+					options.Debug,
+				},
+				Action: func(c *cli.Context) error {
+
+					return nil
+				},
 			},
-			Action: func(c *cli.Context) error {
-
-				name := strings.ToLower(c.String("name"))
-
-				if name == "" {
-					log.Fatalln("Failed: please pass module-name with --name=mymodule")
-				}
-
-				err := Delete(rootPath, name)
-				if err != nil {
-					log.Fatalln("Failed while deleting...", err)
-				}
-
-				return nil
-			},
-		},
-
+		*/
 		{
 			Name:    "run",
 			Aliases: []string{"s"},
 			Usage:   "starting workflow",
 			Flags: []cli.Flag{
 				options.Name,
-				options.Browser,
 				options.Watch,
 				options.Server,
 				options.Production,
 				options.Minify,
 				//options.Format,
 				//options.Port,
+				//options.Browser,
 			},
 			Action: func(c *cli.Context) error {
 
@@ -164,6 +155,29 @@ func main() {
 
 				if server {
 					webserver("3000")
+				}
+
+				return nil
+			},
+		},
+		{
+			Name:    "delete",
+			Aliases: []string{"d"},
+			Usage:   "delete existing component",
+			Flags: []cli.Flag{
+				options.Name,
+			},
+			Action: func(c *cli.Context) error {
+
+				name := strings.ToLower(c.String("name"))
+
+				if name == "" {
+					log.Fatalln("Failed: please pass module-name with --name=mymodule")
+				}
+
+				err := Delete(rootPath, name)
+				if err != nil {
+					log.Fatalln("Failed while deleting...", err)
 				}
 
 				return nil
