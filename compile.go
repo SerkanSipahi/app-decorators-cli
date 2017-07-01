@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/serkansipahi/app-decorators-cli/util/file"
 	"io"
 	"log"
 	"os"
@@ -9,17 +10,30 @@ import (
 	"path/filepath"
 )
 
-type customWriter struct {
+var (
+	writeCount          int
+	callCallbackOnCount int
+	skip                bool
+)
+
+type CustomWrite struct {
 	callback func()
 	w        io.Writer
 }
 
-func (cw *customWriter) Write(p []byte) (n int, err error) {
+func (cw CustomWrite) Write(p []byte) (n int, err error) {
+
+	writeCount++
+
 	n, err = cw.w.Write(p)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	cw.callback()
+
+	if writeCount == callCallbackOnCount || skip {
+		cw.callback()
+		skip = true
+	}
 	return n, err
 }
 
@@ -29,11 +43,22 @@ func compile(src string, dist string, watch bool, callback func()) *exec.Cmd {
 		err      error
 		srcPath  string   = filepath.Join(src)
 		libPath  string   = filepath.Join(dist)
-		commands []string = []string{srcPath, "--out-dir", libPath, "--ignore", "node_modules"}
 		babel    string   = filepath.Join("node_modules", ".bin", "babel")
+		commands []string = []string{srcPath, "--out-dir", libPath, "--ignore", "node_modules"}
+		count    int      = 0
 		cmd      *exec.Cmd
-		cw       = &customWriter{callback: callback, w: os.Stdout}
 	)
+
+	count = file.Count(src, file.CountOptions{
+		Ignore:   "node_modules",
+		FileType: "js",
+	})
+
+	var cw CustomWrite = CustomWrite{
+		callback: callback,
+		w:        os.Stdout,
+	}
+	callCallbackOnCount = count
 
 	// remove compiled files
 	err = os.RemoveAll(libPath)

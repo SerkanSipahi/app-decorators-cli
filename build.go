@@ -9,8 +9,8 @@ import (
 func build(src string, dist string, format string, minify bool, noMangle bool, debug bool) *exec.Cmd {
 
 	var (
-		commands []string
 		jspm     string = filepath.Join("node_modules", ".bin", "jspm")
+		commands []string
 		cmd      *exec.Cmd
 	)
 
