@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/install"
 	"github.com/serkansipahi/app-decorators-cli/options"
@@ -8,6 +9,7 @@ import (
 	"github.com/urfave/cli"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -95,7 +97,7 @@ func main() {
 		{
 			Name:    "run",
 			Aliases: []string{"r"},
-			Usage:   "starting workflow",
+			Usage:   "starting workflow, see: run --help",
 			Flags: []cli.Flag{
 				options.Name,
 				options.Watch,
@@ -109,12 +111,13 @@ func main() {
 			Action: func(c *cli.Context) error {
 
 				var (
-					name       = strings.ToLower(c.String("name"))
-					watch      = c.Bool("watch")
-					format     = "default"
-					server     = c.Bool("server")
-					production = c.Bool("production")
-					minify     = c.Bool("minify")
+					name       string    = strings.ToLower(c.String("name"))
+					watch      bool      = c.Bool("watch")
+					format     string    = "default"
+					server     bool      = c.Bool("server")
+					production bool      = c.Bool("production")
+					minify     bool      = c.Bool("minify")
+					ch         chan bool = make(chan bool)
 					//format   = c.String("format")
 					//port     = c.String("port")
 				)
@@ -134,20 +137,27 @@ func main() {
 				}
 
 				// compile files
+				var cmdBuild *exec.Cmd
 				cmdCompile := compile("src", "lib", watch, func() {
 
 					if !production {
 						return
 					}
 
-					cmdBuild := build("src/index.js", "lib/index.js", format, minify, true, true)
+					cmdBuild = build("src/index.js", "lib/index.js", format, minify, true, true)
 					err = cmdBuild.Run()
+					fmt.Println("Build done!")
 					if err != nil {
 						log.Fatalln(err)
 					}
 
+					// @todo: lösche alle files außer lib/index.js
+					// ... code ...
+					// ... code ...
+
 				})
 
+				//@issue: ./appdec run --name=collapsible --production --watch --server when cmdCompile is .Start
 				err = cmdCompile.Run()
 				if err != nil {
 					log.Fatalln(err)
@@ -183,6 +193,62 @@ func main() {
 				return nil
 			},
 		},
+		/*
+			{
+				Name:    "test",
+				Aliases: []string{"t"},
+				Usage:   "list usage",
+				Flags: []cli.Flag{
+					options.Name,
+				},
+				Action: func(c *cli.Context) error {
+					fmt.Println("test component")
+					return nil
+				},
+			},
+			{
+				Name:    "publish",
+				Aliases: []string{"p"},
+				Usage:   "publish component on npm",
+				Flags: []cli.Flag{
+					options.Name,
+				},
+				Action: func(c *cli.Context) error {
+					// use lerna (internal)
+					fmt.Println("publish component")
+					return nil
+				},
+			},
+			{
+				Name:    "list",
+				Aliases: []string{"l"},
+				Usage:   "list all available modules of app-decorators",
+				Action: func(c *cli.Context) error {
+					fmt.Println("list all modules")
+					return nil
+				},
+			},
+			{
+				Name:    "install",
+				Aliases: []string{"i"},
+				Usage:   "install usage",
+				Flags: []cli.Flag{
+					options.Name,
+				},
+				Action: func(c *cli.Context) error {
+
+					// When installing an existing app-dec or vendor module
+					// it will store the name of module and the type(existing or vendor)
+					// in a file. This is important if we make a bundle/codesplitting
+					// for current developed module.
+
+					// Some other ideas:
+					//
+					fmt.Println("list existing app-dec or vendor module")
+					return nil
+				},
+			},
+		*/
 	}
 
 	app.Run(os.Args)

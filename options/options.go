@@ -31,7 +31,7 @@ var (
 	}
 	Watch = cli.BoolFlag{
 		Name:  "watch",
-		Usage: "compile files on any change",
+		Usage: "watch file",
 	}
 	Format = cli.StringFlag{
 		Name:  "format",

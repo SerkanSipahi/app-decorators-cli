@@ -1,12 +1,27 @@
 package main
 
 import (
+	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 )
 
-func build(src string, dist string, format string, minify bool, noMangle bool, debug bool) *exec.Cmd {
+type BuildWrite struct {
+	w io.Writer
+}
+
+func (cw BuildWrite) Write(p []byte) (n int, err error) {
+
+	n, err = cw.w.Write(p)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return n, err
+}
+
+func build(src, dist, format string, minify, noMangle, debug bool) *exec.Cmd {
 
 	var (
 		jspm     string = filepath.Join("node_modules", ".bin", "jspm")
@@ -23,10 +38,12 @@ func build(src string, dist string, format string, minify bool, noMangle bool, d
 		Minify:   minify,
 	})
 
+	var bw BuildWrite = BuildWrite{w: os.Stdout}
+
 	cmd = exec.Command(jspm, commands...)
 	if debug {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		cmd.Stdout = bw
+		cmd.Stderr = bw
 	}
 
 	return cmd

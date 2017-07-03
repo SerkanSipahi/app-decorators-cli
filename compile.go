@@ -11,17 +11,17 @@ import (
 )
 
 var (
-	writeCount          int
-	callCallbackOnCount int
-	skip                bool
+	writeCount          int  = 0
+	callCallbackOnCount int  = 0
+	skip                bool = false
 )
 
-type CustomWrite struct {
+type CompileWrite struct {
 	callback func()
 	w        io.Writer
 }
 
-func (cw CustomWrite) Write(p []byte) (n int, err error) {
+func (cw CompileWrite) Write(p []byte) (n int, err error) {
 
 	writeCount++
 
@@ -29,7 +29,6 @@ func (cw CustomWrite) Write(p []byte) (n int, err error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	if writeCount == callCallbackOnCount || skip {
 		cw.callback()
 		skip = true
@@ -37,7 +36,7 @@ func (cw CustomWrite) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
-func compile(src string, dist string, watch bool, callback func()) *exec.Cmd {
+func compile(src, dist string, watch bool, callback func()) *exec.Cmd {
 
 	var (
 		err      error
@@ -45,20 +44,18 @@ func compile(src string, dist string, watch bool, callback func()) *exec.Cmd {
 		libPath  string   = filepath.Join(dist)
 		babel    string   = filepath.Join("node_modules", ".bin", "babel")
 		commands []string = []string{srcPath, "--out-dir", libPath, "--ignore", "node_modules"}
-		count    int      = 0
 		cmd      *exec.Cmd
 	)
 
-	count = file.Count(src, file.CountOptions{
+	callCallbackOnCount = file.Count(src, file.CountOptions{
 		Ignore:   "node_modules",
 		FileType: "js",
 	})
 
-	var cw CustomWrite = CustomWrite{
+	var cw = CompileWrite{
 		callback: callback,
 		w:        os.Stdout,
 	}
-	callCallbackOnCount = count
 
 	// remove compiled files
 	err = os.RemoveAll(libPath)
