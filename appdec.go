@@ -111,13 +111,12 @@ func main() {
 			Action: func(c *cli.Context) error {
 
 				var (
-					name       string    = strings.ToLower(c.String("name"))
-					watch      bool      = c.Bool("watch")
-					format     string    = "default"
-					server     bool      = c.Bool("server")
-					production bool      = c.Bool("production")
-					minify     bool      = c.Bool("minify")
-					ch         chan bool = make(chan bool)
+					name       string = strings.ToLower(c.String("name"))
+					watch      bool   = c.Bool("watch")
+					format     string = "default"
+					server     bool   = c.Bool("server")
+					production bool   = c.Bool("production")
+					minify     bool   = c.Bool("minify")
 					//format   = c.String("format")
 					//port     = c.String("port")
 				)
