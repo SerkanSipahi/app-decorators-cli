@@ -111,13 +111,15 @@ func main() {
 			Action: func(c *cli.Context) error {
 
 				var (
-					name       string = strings.ToLower(c.String("name"))
-					watch      bool   = c.Bool("watch")
-					format     string = "default"
-					server     bool   = c.Bool("server")
-					production bool   = c.Bool("production")
-					minify     bool   = c.Bool("minify")
-					//format   = c.String("format")
+					cmdBuild   *exec.Cmd
+					name       string    = strings.ToLower(c.String("name"))
+					watch      bool      = c.Bool("watch")
+					server     bool      = c.Bool("server")
+					production bool      = c.Bool("production")
+					minify     bool      = c.Bool("minify")
+					ch         chan bool = make(chan bool)
+					format     string    = "default"
+					//format     string    = c.String("format")
 					//port     = c.String("port")
 				)
 
@@ -135,36 +137,49 @@ func main() {
 					log.Fatalln("\nCant change to: "+name, err)
 				}
 
-				// compile files
-				var cmdBuild *exec.Cmd
-				cmdCompile := compile("src", "lib", watch, func() {
-
-					if !production {
-						return
-					}
-
-					cmdBuild = build("src/index.js", "lib/index.js", format, minify, true, true)
-					err = cmdBuild.Run()
-					fmt.Println("Build done!")
-					if err != nil {
-						log.Fatalln(err)
-					}
-
-					// @todo: lösche alle files außer lib/index.js
-					// ... code ...
-					// ... code ...
-
-				})
-
-				//@issue: ./appdec run --name=collapsible --production --watch --server when cmdCompile is .Start
-				err = cmdCompile.Run()
-				if err != nil {
-					log.Fatalln(err)
+				if !watch && !server && !production && !minify {
+					log.Fatalln("Please use any option flag: ./appdec --help")
 				}
+
+				// compile files
+				if watch {
+					go compile("src", "lib", watch, ch)
+				} else {
+					go func(ch chan bool) { ch <- true }(ch)
+				}
+
+				go func(ch chan bool) {
+					for {
+						<-ch
+
+						if !production {
+							return
+						}
+
+						if cmdBuild != nil {
+							cmdBuild.Process.Kill()
+						}
+
+						cmdBuild = build("src/index.js", "lib/index.js", format, minify, true, true)
+						err = cmdBuild.Run()
+						if err != nil {
+							log.Fatalln(err)
+						}
+
+						// @todo: lösche alle files außer lib/index.js
+						// ... code ...
+						// ... code ...
+
+						os.Exit(1)
+					}
+				}(ch)
 
 				if server {
-					webserver("3000")
+					go webserver("3000")
 				}
+
+				var input string
+				fmt.Scanln(&input)
 
 				return nil
 			},

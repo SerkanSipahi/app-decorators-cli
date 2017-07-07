@@ -17,8 +17,8 @@ var (
 )
 
 type CompileWrite struct {
-	callback func()
-	w        io.Writer
+	w  io.Writer
+	ch chan bool
 }
 
 func (cw CompileWrite) Write(p []byte) (n int, err error) {
@@ -30,13 +30,13 @@ func (cw CompileWrite) Write(p []byte) (n int, err error) {
 		log.Fatalln(err)
 	}
 	if writeCount == callCallbackOnCount || skip {
-		cw.callback()
 		skip = true
+		cw.ch <- true
 	}
 	return n, err
 }
 
-func compile(src, dist string, watch bool, callback func()) *exec.Cmd {
+func compile(src, dist string, watch bool, ch chan bool) {
 
 	var (
 		err      error
@@ -53,8 +53,8 @@ func compile(src, dist string, watch bool, callback func()) *exec.Cmd {
 	})
 
 	var cw = CompileWrite{
-		callback: callback,
-		w:        os.Stdout,
+		w:  os.Stdout,
+		ch: ch,
 	}
 
 	// remove compiled files
@@ -71,5 +71,8 @@ func compile(src, dist string, watch bool, callback func()) *exec.Cmd {
 	cmd.Stdout = cw
 	cmd.Stderr = cw
 
-	return cmd
+	err = cmd.Run()
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
