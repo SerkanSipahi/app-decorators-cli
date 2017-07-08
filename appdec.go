@@ -5,6 +5,7 @@ import (
 	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/install"
 	"github.com/serkansipahi/app-decorators-cli/options"
+	"github.com/serkansipahi/app-decorators-cli/util/file"
 	utilOs "github.com/serkansipahi/app-decorators-cli/util/os"
 	"github.com/urfave/cli"
 	"log"
@@ -112,13 +113,13 @@ func main() {
 
 				var (
 					cmdBuild   *exec.Cmd
-					name       string    = strings.ToLower(c.String("name"))
-					watch      bool      = c.Bool("watch")
-					server     bool      = c.Bool("server")
-					production bool      = c.Bool("production")
-					minify     bool      = c.Bool("minify")
-					ch         chan bool = make(chan bool)
-					format     string    = "default"
+					name       string      = strings.ToLower(c.String("name"))
+					watch      bool        = c.Bool("watch")
+					server     bool        = c.Bool("server")
+					production bool        = c.Bool("production")
+					minify     bool        = c.Bool("minify")
+					ch         chan string = make(chan string)
+					format     string      = "default"
 					//format     string    = c.String("format")
 					//port     = c.String("port")
 				)
@@ -145,14 +146,16 @@ func main() {
 				if watch {
 					go compile("src", "lib", watch, ch)
 				} else {
-					go func(ch chan bool) { ch <- true }(ch)
+					go func(ch chan<- string) { ch <- "chan: [no watch]" }(ch)
 				}
 
-				go func(ch chan bool) {
+				go func(ch chan string) {
 					for {
-						<-ch
 
+						var chMsg string = <-ch
+						fmt.Println("go1", chMsg)
 						if !production {
+							ch <- "chan: [no production]"
 							return
 						}
 
@@ -166,11 +169,17 @@ func main() {
 							log.Fatalln(err)
 						}
 
-						// @todo: lösche alle files außer lib/index.js
-						// ... code ...
-						// ... code ...
+						ch <- "chan: [build done]"
 
-						os.Exit(1)
+						file.DeleteExcept("./lib", "lib/index", "js")
+
+					}
+				}(ch)
+
+				go func(ch <-chan string) {
+					for {
+						var chMsg string = <-ch
+						fmt.Println("go2", chMsg)
 					}
 				}(ch)
 

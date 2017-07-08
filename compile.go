@@ -18,7 +18,7 @@ var (
 
 type CompileWrite struct {
 	w  io.Writer
-	ch chan bool
+	ch chan<- string
 }
 
 func (cw CompileWrite) Write(p []byte) (n int, err error) {
@@ -31,12 +31,12 @@ func (cw CompileWrite) Write(p []byte) (n int, err error) {
 	}
 	if writeCount == callCallbackOnCount || skip {
 		skip = true
-		cw.ch <- true
+		cw.ch <- "chan: [file changed]"
 	}
 	return n, err
 }
 
-func compile(src, dist string, watch bool, ch chan bool) {
+func compile(src, dist string, watch bool, ch chan<- string) {
 
 	var (
 		err      error
