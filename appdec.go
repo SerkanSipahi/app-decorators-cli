@@ -1,19 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/install"
 	"github.com/serkansipahi/app-decorators-cli/options"
-	"github.com/serkansipahi/app-decorators-cli/util/file"
 	utilOs "github.com/serkansipahi/app-decorators-cli/util/os"
 	"github.com/urfave/cli"
 	"log"
 	"os"
-	"os/exec"
-	"os/signal"
 	"strings"
-	"syscall"
 )
 
 const (
@@ -107,95 +101,34 @@ func main() {
 				options.Server,
 				options.Production,
 				options.Minify,
-				//options.Format,
-				//options.Port,
-				//options.Browser,
+				options.Debug,
+				options.Format,
+				options.Port,
+				options.Browser,
 			},
 			Action: func(c *cli.Context) error {
 
-				var (
-					cmdBuild   *exec.Cmd
-					name       string         = strings.ToLower(c.String("name"))
-					watch      bool           = c.Bool("watch")
-					server     bool           = c.Bool("server")
-					production bool           = c.Bool("production")
-					minify     bool           = c.Bool("minify")
-					ch         chan string    = make(chan string, 1)
-					killSigs   chan os.Signal = make(chan os.Signal, 1)
-					format     string         = "default"
-					//format     string    = c.String("format")
-					//port     = c.String("port")
-				)
-
-				signal.Notify(killSigs, os.Interrupt, syscall.SIGTERM)
-
-				if name == "" {
+				var name string = strings.ToLower(c.String("name"))
+				if name {
 					log.Fatalln("\nFailed: please pass component name e.g. --name=component")
 				}
 
-				// component has appdec.json
-				if err := helper.ModuleExists(name); err != nil {
-					log.Fatalln("\nComponent: " + name + " does not exists!")
+				var err error = Run(RunConfig{
+					Name:       name,
+					Watch:      c.Bool("watch"),
+					Server:     c.Bool("server"),
+					Production: c.Bool("production"),
+					Minify:     c.Bool("debug"),
+					Debug:      c.Bool("debug"),
+					Ch:         make(chan string, 1),
+					KillSigs:   make(chan os.Signal, 1),
+					Format:     "default",
+					Port:       c.String("port"),
+				})
+
+				if err != nil {
+					log.Fatalln(err)
 				}
-
-				// change to component directory
-				if err = os.Chdir(name); err != nil {
-					log.Fatalln("\nCant change to: "+name, err)
-				}
-
-				if !watch && !server && !production && !minify {
-					log.Fatalln("Please use any option flag: ./appdec --help")
-				}
-
-				// compile files
-				if watch {
-					go compile("src", "lib", watch, ch)
-				} else {
-					go func(ch chan<- string) { ch <- "chan: [no watch]" }(ch)
-				}
-
-				go func(ch chan string) {
-					for {
-
-						var chMsg string = <-ch
-						fmt.Println("go1", chMsg)
-						if !production {
-							ch <- "chan: [no production]"
-							return
-						}
-
-						if cmdBuild != nil {
-							cmdBuild.Process.Kill()
-						}
-
-						cmdBuild = build("src/index.js", "lib/index.js", format, minify, true, true)
-						err = cmdBuild.Run()
-						if err != nil {
-							log.Fatalln(err)
-						}
-
-						ch <- "chan: [build done]"
-					}
-				}(ch)
-
-				go func(ch <-chan string) {
-					for {
-						var chMsg string = <-ch
-						fmt.Println("go2", chMsg)
-					}
-				}(ch)
-
-				if server {
-					go webserver("3000")
-				}
-
-				<-killSigs
-
-				if production {
-					file.DeleteExcept("./lib", "lib/index", "js")
-				}
-
-				fmt.Println("Stop appdec!")
 
 				return nil
 			},
