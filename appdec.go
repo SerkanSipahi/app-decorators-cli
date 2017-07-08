@@ -11,7 +11,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
 )
 
 const (
@@ -113,16 +115,19 @@ func main() {
 
 				var (
 					cmdBuild   *exec.Cmd
-					name       string      = strings.ToLower(c.String("name"))
-					watch      bool        = c.Bool("watch")
-					server     bool        = c.Bool("server")
-					production bool        = c.Bool("production")
-					minify     bool        = c.Bool("minify")
-					ch         chan string = make(chan string)
-					format     string      = "default"
+					name       string         = strings.ToLower(c.String("name"))
+					watch      bool           = c.Bool("watch")
+					server     bool           = c.Bool("server")
+					production bool           = c.Bool("production")
+					minify     bool           = c.Bool("minify")
+					ch         chan string    = make(chan string, 1)
+					killSigs   chan os.Signal = make(chan os.Signal, 1)
+					format     string         = "default"
 					//format     string    = c.String("format")
 					//port     = c.String("port")
 				)
+
+				signal.Notify(killSigs, os.Interrupt, syscall.SIGTERM)
 
 				if name == "" {
 					log.Fatalln("\nFailed: please pass component name e.g. --name=component")
@@ -187,8 +192,7 @@ func main() {
 					go webserver("3000")
 				}
 
-				var input string
-				fmt.Scanln(&input)
+				<-killSigs
 
 				return nil
 			},
