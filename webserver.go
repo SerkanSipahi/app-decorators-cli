@@ -45,7 +45,6 @@ func webserver(port string) error {
 	}
 
 	fmt.Println("Stop server!")
-	os.Exit(1)
 
 	return nil
 

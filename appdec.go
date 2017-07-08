@@ -175,9 +175,6 @@ func main() {
 						}
 
 						ch <- "chan: [build done]"
-
-						file.DeleteExcept("./lib", "lib/index", "js")
-
 					}
 				}(ch)
 
@@ -193,6 +190,12 @@ func main() {
 				}
 
 				<-killSigs
+
+				if production {
+					file.DeleteExcept("./lib", "lib/index", "js")
+				}
+
+				fmt.Println("Stop appdec!")
 
 				return nil
 			},
