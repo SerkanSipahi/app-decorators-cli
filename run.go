@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/util/file"
 	"log"
 	"os"
@@ -27,12 +26,10 @@ type RunConfig struct {
 
 func Run(c RunConfig) error {
 
-	signal.Notify(c.KillSigs, os.Interrupt, syscall.SIGTERM)
+	//@Todo:
+	// kill server (express) before starting
 
-	// component has appdec.json
-	if err := helper.ModuleExists(c.Name); err != nil {
-		log.Fatalln("\nComponent: " + c.Name + " does not exists!")
-	}
+	signal.Notify(c.KillSigs, os.Interrupt, syscall.SIGTERM)
 
 	// change to component directory
 	if err = os.Chdir(c.Name); err != nil {
@@ -63,7 +60,7 @@ func Run(c RunConfig) error {
 				c.CmdBuild.Process.Kill()
 			}
 
-			c.CmdBuild = build("src/index.js", "lib/index.js", c.Format, c.Minify, true, true)
+			c.CmdBuild = build("lib/index.js", "lib/index.js", c.Format, c.Minify, true, true)
 			err = c.CmdBuild.Run()
 			if err != nil {
 				log.Fatalln(err)

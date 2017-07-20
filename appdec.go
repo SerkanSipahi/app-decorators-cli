@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/serkansipahi/app-decorators-cli/helper"
 	"github.com/serkansipahi/app-decorators-cli/install"
 	"github.com/serkansipahi/app-decorators-cli/options"
 	utilOs "github.com/serkansipahi/app-decorators-cli/util/os"
@@ -109,8 +110,13 @@ func main() {
 			Action: func(c *cli.Context) error {
 
 				var name string = strings.ToLower(c.String("name"))
-				if name {
+				if name == "" {
 					log.Fatalln("\nFailed: please pass component name e.g. --name=component")
+				}
+
+				// component has appdec.json
+				if err := helper.ModuleExists(name); err != nil {
+					log.Fatalln("\nComponent: " + name + " does not exists!")
 				}
 
 				var err error = Run(RunConfig{
@@ -122,7 +128,7 @@ func main() {
 					Debug:      c.Bool("debug"),
 					Ch:         make(chan string, 1),
 					KillSigs:   make(chan os.Signal, 1),
-					Format:     "default",
+					Format:     c.String("format"),
 					Port:       c.String("port"),
 				})
 

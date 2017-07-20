@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -34,6 +35,7 @@ func DeleteExcept(walk string, exceptFile string, ext string) error {
 			log.Fatalln(err)
 
 		}
+		fmt.Println("DELETE-EXCEPT: ", fullPath)
 
 		return nil
 	})
