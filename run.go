@@ -52,7 +52,6 @@ func Run(c RunConfig) error {
 	// compile files
 	if c.Watch {
 		go compile("src", dist, c.Watch, c.Ch)
-
 	} else {
 		go func(ch chan<- string) {
 			ch <- "chan: [no watch]"
@@ -86,7 +85,6 @@ func Run(c RunConfig) error {
 	}
 
 	<-c.KillSigs
-
 	fmt.Println("Stop appdec!")
 
 	return nil
