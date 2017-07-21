@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/serkansipahi/app-decorators-cli/util/file"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
+	"sync"
 	"syscall"
 )
 
@@ -24,12 +25,15 @@ type RunConfig struct {
 	Port       string
 }
 
+var Lock sync.Mutex
+
 func Run(c RunConfig) error {
 
 	//@Todo:
 	// kill server (express) before starting
 
 	signal.Notify(c.KillSigs, os.Interrupt, syscall.SIGTERM)
+	lock := &Lock
 
 	// change to component directory
 	if err = os.Chdir(c.Name); err != nil {
@@ -40,52 +44,48 @@ func Run(c RunConfig) error {
 		log.Fatalln("Please use any option flag: ./appdec --help")
 	}
 
-	// compile files
-	if c.Watch {
-		go compile("src", "lib", c.Watch, c.Ch)
-	} else {
-		go func(ch chan<- string) { ch <- "chan: [no watch]" }(c.Ch)
+	dist := "lib"
+	if c.Production {
+		dist = "tmp"
 	}
 
-	go func(ch chan string) {
+	// compile files
+	if c.Watch {
+		go compile("src", dist, c.Watch, c.Ch)
+
+	} else {
+		go func(ch chan<- string) {
+			ch <- "chan: [no watch]"
+		}(c.Ch)
+	}
+
+	go func(ch <-chan string, lock *sync.Mutex) {
 		for {
-			var chMsg string = <-ch
-			fmt.Println("DEBUG: go1", chMsg)
-			if !c.Production {
-				ch <- "chan: [no production]"
-				return
-			}
+			select {
+			case chMsg := <-ch:
+				fmt.Println("DEBUG: go1", chMsg)
+				if !c.Production {
+					return
+				}
 
-			if c.CmdBuild != nil {
-				c.CmdBuild.Process.Kill()
+				lock.Lock()
+				c.CmdBuild = build(filepath.Join(dist, "index.js"), "lib/index.js", c.Format, c.Minify, true, true)
+				err = c.CmdBuild.Run()
+				if err != nil {
+					log.Fatalln(err)
+				}
+				lock.Unlock()
+			default:
+				// Channel full. Discarding value
 			}
-
-			c.CmdBuild = build("lib/index.js", "lib/index.js", c.Format, c.Minify, true, true)
-			err = c.CmdBuild.Run()
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			ch <- "chan: [build done]"
 		}
-	}(c.Ch)
-
-	go func(ch <-chan string) {
-		for {
-			var chMsg string = <-ch
-			fmt.Println("DEBUG: go2", chMsg)
-		}
-	}(c.Ch)
+	}(c.Ch, lock)
 
 	if c.Server {
-		go webserver("3000")
+		go webserver("3000", lock)
 	}
 
 	<-c.KillSigs
-
-	if c.Production {
-		file.DeleteExcept("./lib", "lib/index", "js")
-	}
 
 	fmt.Println("Stop appdec!")
 

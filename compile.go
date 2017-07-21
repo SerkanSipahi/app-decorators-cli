@@ -52,11 +52,6 @@ func compile(src, dist string, watch bool, ch chan<- string) {
 		FileType: "js",
 	})
 
-	var cw = CompileWrite{
-		w:  os.Stdout,
-		ch: ch,
-	}
-
 	// remove compiled files
 	err = os.RemoveAll(libPath)
 	if err != nil {
@@ -65,6 +60,11 @@ func compile(src, dist string, watch bool, ch chan<- string) {
 
 	if watch {
 		commands = append(commands, "--watch")
+	}
+
+	var cw = CompileWrite{
+		w:  os.Stdout,
+		ch: ch,
 	}
 
 	cmd = exec.Command(babel, commands...)

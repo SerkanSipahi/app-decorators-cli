@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"sync"
 	"syscall"
 )
 
@@ -13,7 +14,7 @@ var (
 	cmd *exec.Cmd
 )
 
-func webserver(port string) error {
+func webserver(port string, lock *sync.Mutex) error {
 
 	if cmd != nil {
 		cmd.Process.Kill()
@@ -23,9 +24,11 @@ func webserver(port string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
+	lock.Lock()
 	if err = cmd.Start(); err != nil {
 		return err
 	}
+	lock.Unlock()
 
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
@@ -40,9 +43,11 @@ func webserver(port string) error {
 	}()
 	<-done
 
+	lock.Lock()
 	if err = cmd.Process.Kill(); err != nil {
 		return err
 	}
+	lock.Unlock()
 
 	fmt.Println("Stop server!")
 
