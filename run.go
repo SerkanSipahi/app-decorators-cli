@@ -25,18 +25,15 @@ type RunConfig struct {
 	Port       string
 }
 
-var Lock sync.Mutex
-
 func Run(c RunConfig) error {
 
 	//@Todo:
 	// kill server (express) before starting
 
 	signal.Notify(c.KillSigs, os.Interrupt, syscall.SIGTERM)
-	lock := &Lock
 
 	// change to component directory
-	if err = os.Chdir(c.Name); err != nil {
+	if err := os.Chdir(c.Name); err != nil {
 		log.Fatalln("\nCant change to: "+c.Name, err)
 	}
 
@@ -58,6 +55,8 @@ func Run(c RunConfig) error {
 		}(c.Ch)
 	}
 
+	lock := &sync.Mutex{}
+
 	go func(ch <-chan string, lock *sync.Mutex) {
 		for {
 			select {
@@ -74,6 +73,10 @@ func Run(c RunConfig) error {
 					log.Fatalln(err)
 				}
 				lock.Unlock()
+
+				if !c.Watch {
+					os.Exit(1)
+				}
 			default:
 				// Channel full. Discarding value
 			}

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type BuildWrite struct {
@@ -39,6 +41,8 @@ func build(src, dist, format string, minify, noMangle, debug bool) *exec.Cmd {
 	})
 
 	var bw BuildWrite = BuildWrite{w: os.Stdout}
+
+	fmt.Println("COMMAND: ", jspm, strings.Join(commands, " "))
 
 	cmd = exec.Command(jspm, commands...)
 	if debug {
