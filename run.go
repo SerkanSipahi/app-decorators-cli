@@ -77,7 +77,7 @@ func Run(c RunConfig) error {
 
 				lock.Unlock()
 
-				if !c.Watch {
+				if !c.Watch && !c.Server {
 					os.Exit(1)
 				}
 			default:
