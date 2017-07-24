@@ -46,9 +46,10 @@ func TestBuildOptions2(t *testing.T) {
 func TestBuildOptions3(t *testing.T) {
 
 	cmd := BuildOptions(BuildOptionsConfig{
-		Src:    "a/x.js",
-		Dist:   "b/x.js",
-		Format: "abc",
+		Src:            "a/x.js",
+		Dist:           "b/x.js",
+		Format:         "abc",
+		AllowedFormats: "default|abc",
 	})
 	cmdStr := strings.Join(cmd, " ")
 	excepted := "build a/x.js b/x.js --format abc"
@@ -65,10 +66,11 @@ func TestBuildOptions3(t *testing.T) {
 func TestBuildOptions4(t *testing.T) {
 
 	cmd := BuildOptions(BuildOptionsConfig{
-		Src:     "a/x.js",
-		Dist:    "b/x.js",
-		Exclude: "module",
-		Format:  "abc",
+		Src:            "a/x.js",
+		Dist:           "b/x.js",
+		Exclude:        "module",
+		Format:         "abc",
+		AllowedFormats: "default|abc",
 	})
 	cmdStr := strings.Join(cmd, " ")
 	excepted := "build a/x.js - module b/x.js --format abc"
@@ -85,11 +87,12 @@ func TestBuildOptions4(t *testing.T) {
 func TestBuildOptions5(t *testing.T) {
 
 	cmd := BuildOptions(BuildOptionsConfig{
-		Src:      "a/x.js",
-		Dist:     "b/x.js",
-		Exclude:  "module",
-		Format:   "abc",
-		NoMangle: true,
+		Src:            "a/x.js",
+		Dist:           "b/x.js",
+		Exclude:        "module",
+		Format:         "abc",
+		NoMangle:       true,
+		AllowedFormats: "default|abc",
 	})
 	cmdStr := strings.Join(cmd, " ")
 	excepted := "build a/x.js - module b/x.js --no-mangle --format abc"
@@ -106,12 +109,13 @@ func TestBuildOptions5(t *testing.T) {
 func TestBuildOptions6(t *testing.T) {
 
 	cmd := BuildOptions(BuildOptionsConfig{
-		Src:      "a/x.js",
-		Dist:     "b/x.js",
-		Exclude:  "module",
-		Format:   "abc",
-		NoMangle: true,
-		Minify:   true,
+		Src:            "a/x.js",
+		Dist:           "b/x.js",
+		Exclude:        "module",
+		Format:         "abc",
+		NoMangle:       true,
+		Minify:         true,
+		AllowedFormats: "default|abc",
 	})
 	cmdStr := strings.Join(cmd, " ")
 	excepted := "build a/x.js - module b/x.js --minify --no-mangle --format abc"

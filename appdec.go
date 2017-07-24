@@ -106,6 +106,7 @@ func main() {
 				options.Format,
 				options.Port,
 				options.Browser,
+				options.NoMangle,
 			},
 			Action: func(c *cli.Context) error {
 
@@ -124,7 +125,8 @@ func main() {
 					Watch:      c.Bool("watch"),
 					Server:     c.Bool("server"),
 					Production: c.Bool("production"),
-					Minify:     c.Bool("debug"),
+					Minify:     c.Bool("minify"),
+					NoMangle:   c.Bool("no-mangle"),
 					Debug:      c.Bool("debug"),
 					Ch:         make(chan string, 1),
 					KillSigs:   make(chan os.Signal, 1),

@@ -7,28 +7,27 @@ import (
 )
 
 type BuildOptionsConfig struct {
-	Src      string
-	Dist     string
-	Exclude  string
-	Format   string
-	NoMangle bool
-	Minify   bool
+	Src            string
+	Dist           string
+	Exclude        string
+	Format         string
+	AllowedFormats string
+	Alias          string
+	NoMangle       bool
+	Minify         bool
 }
 
 func BuildOptions(opts BuildOptionsConfig) []string {
 
-	//@TODO: --format=static übergeben können
-
 	var (
-		formatRegexp string   = "default|static|cjs|amd|umd"
-		srcPath      string   = filepath.Join(opts.Src)
-		distPath     string   = filepath.Join(opts.Dist)
-		commands     []string = []string{}
+		srcPath  string   = filepath.Join(opts.Src)
+		distPath string   = filepath.Join(opts.Dist)
+		commands []string = []string{}
 	)
 
 	if opts.Format != "default" {
-		if matched, _ := regexp.MatchString(formatRegexp, opts.Format); matched {
-			log.Fatalln("Allowed formats: " + formatRegexp)
+		if matched, _ := regexp.MatchString(opts.AllowedFormats, opts.Format); matched == false {
+			log.Fatalln("Allowed formats: " + opts.AllowedFormats + " - but you passed: " + opts.Format)
 		}
 	}
 

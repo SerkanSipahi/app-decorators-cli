@@ -33,6 +33,10 @@ var (
 		Name:  "watch",
 		Usage: "watch file",
 	}
+	NoMangle = cli.BoolFlag{
+		Name:  "no-mangle",
+		Usage: "no mangle",
+	}
 	Format = cli.StringFlag{
 		Name:  "format",
 		Value: "default",

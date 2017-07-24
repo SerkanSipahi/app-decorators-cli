@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 )
@@ -18,6 +20,7 @@ type RunConfig struct {
 	Server     bool
 	Production bool
 	Minify     bool
+	NoMangle   bool
 	Debug      bool
 	Ch         chan string
 	KillSigs   chan os.Signal
@@ -37,23 +40,13 @@ func Run(c RunConfig) error {
 		log.Fatalln("\nCant change to: "+c.Name, err)
 	}
 
-	if !c.Watch && !c.Server && !c.Production && !c.Minify {
-		log.Fatalln("Please use any option flag: ./appdec --help")
-	}
-
 	dist := "lib"
 	if c.Production {
 		dist = "tmp"
 	}
 
 	// compile files
-	if c.Watch {
-		go compile("src", dist, c.Watch, c.Ch)
-	} else {
-		go func(ch chan<- string) {
-			ch <- "chan: [no watch]"
-		}(c.Ch)
-	}
+	go compile("src", dist, c.Watch, c.Ch)
 
 	lock := &sync.Mutex{}
 
@@ -67,11 +60,21 @@ func Run(c RunConfig) error {
 				}
 
 				lock.Lock()
-				c.CmdBuild = build(filepath.Join(dist, "index.js"), "lib/index.js", c.Format, c.Minify, true, true)
+				tmpPath := filepath.Join(dist, "index.js")
+				libPath := filepath.Join("lib", "index.js")
+				c.CmdBuild = build(tmpPath, libPath, c.Format, c.Minify, c.NoMangle, c.Debug)
 				err = c.CmdBuild.Run()
 				if err != nil {
 					log.Fatalln(err)
 				}
+
+				read, err := ioutil.ReadFile(libPath)
+				newContents := strings.Replace(string(read), tmpPath, libPath, -1)
+				err = ioutil.WriteFile(libPath, []byte(newContents), 0)
+				if err != nil {
+					log.Fatalln(err)
+				}
+
 				lock.Unlock()
 
 				if !c.Watch {

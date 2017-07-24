@@ -32,23 +32,27 @@ func build(src, dist, format string, minify, noMangle, debug bool) *exec.Cmd {
 	)
 
 	commands = BuildOptions(BuildOptionsConfig{
-		Src:      src,
-		Dist:     dist,
-		Format:   format,
-		NoMangle: noMangle,
-		Exclude:  "app-decorators",
-		Minify:   minify,
+		Src:            src,
+		Dist:           dist,
+		Format:         format,
+		AllowedFormats: "default|static|cjs|amd|umd",
+		NoMangle:       noMangle,
+		Exclude:        "app-decorators",
+		Minify:         minify,
 	})
 
 	var bw BuildWrite = BuildWrite{w: os.Stdout}
 
 	fmt.Println("COMMAND: ", jspm, strings.Join(commands, " "))
+	if debug {
+		//fmt.Println("COMMAND: ", jspm, strings.Join(commands, " "))
+	}
 
 	cmd = exec.Command(jspm, commands...)
-	if debug {
-		cmd.Stdout = bw
-		cmd.Stderr = bw
-	}
+	//if debug {
+	cmd.Stdout = bw
+	cmd.Stderr = bw
+	//}
 
 	return cmd
 }
