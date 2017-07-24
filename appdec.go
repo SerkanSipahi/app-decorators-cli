@@ -15,7 +15,7 @@ const (
 	CLI_NAME     = "appdec"
 	AUTHOR_NAME  = "Serkan Sipahi"
 	AUTHOR_EMAIL = "serkan.sipahi@yahoo.de"
-	APP_VERSION  = "0.8.221"
+	APP_VERSION  = "0.8.233"
 	COPYRIGHT    = "(c) 2017"
 )
 
