@@ -35,7 +35,7 @@ func build(src, dist, format string, minify, noMangle, debug bool) *exec.Cmd {
 		Src:            src,
 		Dist:           dist,
 		Format:         format,
-		AllowedFormats: "default|static|cjs|amd|umd",
+		AllowedFormats: "default|amd|cjs|umd|esm",
 		NoMangle:       noMangle,
 		Exclude:        "app-decorators",
 		Minify:         minify,
