@@ -129,7 +129,7 @@ appdec delete --name=my-module
 
 To customize Babel:
 
-1. You override [`.babelrc`](https://babeljs.io/docs/usage/babelrc/) file in your project's root directory.
+You override [`.babelrc`](https://babeljs.io/docs/usage/babelrc/) file in your project's root directory.
 
 #### Systemjs
 
