@@ -1,6 +1,6 @@
 # app-decorators-cli (Beta)
 
-> Start building a app-decorators webcomponent
+> Start building a [`app-decorators`](https://github.com/SerkanSipahi/app-decorators) webcomponent
 
 ### Installation (use existing binaries)
 ```sh
