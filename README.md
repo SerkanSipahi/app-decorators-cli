@@ -83,23 +83,23 @@ appdec run --name=my-module
 appdec run --name=my-module --watch
 
 # --server: start server on port 3000
-appdec run --name=my-module --server --watch
+appdec run --name=my-module --server
 
 # --production: build a bundle file
-appdec run --name=my-module --production --watch --server
+appdec run --name=my-module --production
 
 # --format: set module format (work only with --production)
 # available formats: default|amd|cjs|umd|esm
-appdec run --name=my-module --production --format=cjs --watch --server
+appdec run --name=my-module --production --format=cjs
 
 # --minify: miniy,reduce the file
-appdec run --name=my-module --minify --production --format=cjs --watch --server
+appdec run --name=my-module --minify --production --format=cjs
 
 # --no-mangle: mangle
-appdec run --name=my-module --no-mangle=true --watch --production --format=cjs --server --minify
+appdec run --name=my-module --no-mangle=true -production --format=cjs --minify
 
 # --debug: mangle
-appdec run --name=my-module --debug --watch --production --format=cjs --server --minify --no-mangle=true
+appdec run --name=my-module --debug
 
 ======================
 ### delete command ###
