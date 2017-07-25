@@ -53,10 +53,59 @@ $ appdec run
   --watch          watch file                                           [default: false]
   --server         start server                                         [default: false]
   --production     set production environment                           [default: false]
+  --format         define component format (amd|cjs|umd|esm)            [default: "default"]
   --minify         will minify code                                     [default: false]
   --debug          will show debug messages                             [default: false]
-  --format         define component format (amd|cjs|umd|esm)            [default: "default"]
   --no-mangle      no mangle                                            [default: false]
+  --test           (under construction)                                 [default: false]
+```
+
+### Advanced usage
+
+This is just a recommendation, you can use the options in any combination:
+```sh
+
+======================
+### create command ###
+======================
+
+# create a new app
+appdec create --name=my-module
+
+===================
+### run command ###
+===================
+
+# compile all file in project src directory
+appdec run --name=my-module
+
+# --watch: compile file on any file change
+appdec run --name=my-module --watch
+
+# --server: start server on port 3000
+appdec run --name=my-module --server --watch
+
+# --production: build a bundle file
+appdec run --name=my-module --production --watch --server
+
+# --format: set module format (work only with --production)
+appdec run --name=my-module --production --format=cjs --watch --server
+
+# --minify: miniy,reduce the file
+appdec run --name=my-module --minify --production --format=cjs --watch --server
+
+# --no-mangle: mangle
+appdec run --name=my-module --no-mangle=true --watch --production --format=cjs --server --minify
+
+# --debug: mangle
+appdec run --name=my-module --debug --watch --production --format=cjs --server --minify --no-mangle=true
+
+======================
+### delete command ###
+======================
+
+# delete existing app
+appdec delete --name=my-module
 ```
 
 #### Babel
