@@ -2,7 +2,23 @@
 
 > Start building a app-decorators webcomponent
 
-### Installation
+### Installation (use existing binaries)
+```sh
+# get app-decorators via github
+git clone https://github.com/SerkanSipahi/app-decorators-cli.git
+
+cd app-decorators-cli
+
+# for osx
+mv ./bin/osx/appdec /usr/local/bin/appdec
+
+# for linux
+mv ./bin/linux/appdec /usr/local/bin/appdec
+
+# windows bin is in ./bin/win/appdec.exe located
+```
+
+### Installation (self building)
 
 ```sh
 # get app-decorators via github
