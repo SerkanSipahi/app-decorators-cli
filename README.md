@@ -89,6 +89,7 @@ appdec run --name=my-module --server --watch
 appdec run --name=my-module --production --watch --server
 
 # --format: set module format (work only with --production)
+# available formats: default|amd|cjs|umd|esm
 appdec run --name=my-module --production --format=cjs --watch --server
 
 # --minify: miniy,reduce the file
