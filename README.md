@@ -34,8 +34,8 @@ mv appdec /usr/local/bin/appdec
 
 ### Quickstart
 ```sh
-appdec create my-module
-appdec run --name=my-module --watch --server
+appdec create --name my-module
+appdec run --name my-module --watch --server
 
 # then open localhost:3000
 ```
