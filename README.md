@@ -112,7 +112,7 @@ appdec run --name=mymodule --production --format=cjs
 appdec run --name=mymodule --minify --production --format=cjs
 
 # --no-mangle: mangle
-appdec run --name=mymodule --no-mangle=true -production --format=cjs --minify
+appdec run --name=mymodule --no-mangle=true --production --format=cjs --minify
 
 # --debug: mangle
 appdec run --name=mymodule --debug
