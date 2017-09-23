@@ -34,8 +34,8 @@ mv appdec /usr/local/bin/appdec
 
 ### Quickstart
 ```sh
-appdec create --name my-module
-appdec run --name my-module --watch --server
+appdec create --name=mymodule
+appdec run --name=mymodule --watch --server
 
 # then open localhost:3000
 ```
@@ -86,43 +86,43 @@ This is just a recommendation, you can use the options in any combination:
 ======================
 
 # create a new app
-appdec create --name=my-module
+appdec create --name=mymodule
 
 ===================
 ### run command ###
 ===================
 
 # compile all file in project src directory
-appdec run --name=my-module
+appdec run --name=mymodule
 
 # --watch: compile file on any file change
-appdec run --name=my-module --watch
+appdec run --name=mymodule --watch
 
 # --server: start server on port 3000
-appdec run --name=my-module --server
+appdec run --name=mymodule --server
 
 # --production: build a bundle file
-appdec run --name=my-module --production
+appdec run --name=mymodule --production
 
 # --format: set module format (work only with --production)
 # available formats: default|amd|cjs|umd|esm
-appdec run --name=my-module --production --format=cjs
+appdec run --name=mymodule --production --format=cjs
 
 # --minify: miniy,reduce the file
-appdec run --name=my-module --minify --production --format=cjs
+appdec run --name=mymodule --minify --production --format=cjs
 
 # --no-mangle: mangle
-appdec run --name=my-module --no-mangle=true -production --format=cjs --minify
+appdec run --name=mymodule --no-mangle=true -production --format=cjs --minify
 
 # --debug: mangle
-appdec run --name=my-module --debug
+appdec run --name=mymodule --debug
 
 ======================
 ### delete command ###
 ======================
 
 # delete existing app
-appdec delete --name=my-module
+appdec delete --name=mymodule
 ```
 
 #### Babel

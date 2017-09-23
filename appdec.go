@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -58,7 +59,13 @@ func main() {
 
 				// assign passed args
 				name := strings.ToLower(c.String("name"))
+				name = strings.Trim(name, " ")
 				debug := c.Bool("debug")
+
+				regex := regexp.MustCompile(`[^a-zA-Z]+`)
+				if ok := regex.MatchString(name); ok {
+					log.Fatalln("Only letters between a and z allowed!")
+				}
 
 				// create installer
 				installer := install.New(
