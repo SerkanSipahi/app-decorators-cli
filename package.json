@@ -6,6 +6,9 @@
     "type": "git",
     "url": "git+https://github.com/SerkanSipahi/app-decortors-cli.git"
   },
+  "scripts": {
+      "deploy": "lerna publish --exact --force-publish=*"
+  },
   "author": "Serkan Sipahi <serkan.sipahi@yahoo.de>",
   "license": "MIT",
   "devDependencies": {
