@@ -2,7 +2,22 @@
 
 > Start building a [`app-decorators`](https://github.com/SerkanSipahi/app-decorators) webcomponent
 
-### Installation (use existing binaries)
+### Installation "with npm"
+```sh
+# For Mac
+npm install appdec-cli-osx --global
+
+# For Windows
+npm install appdec-cli-win --global
+
+# For Linux
+npm install appdec-cli-linux --global
+
+# then
+appdec create --name=mymodule
+```
+
+### Installation "with github clone"
 ```sh
 # get app-decorators via github
 git clone https://github.com/SerkanSipahi/app-decorators-cli.git
@@ -18,7 +33,7 @@ mv ./bin/linux/appdec /usr/local/bin/appdec
 # windows bin is in ./bin/win/appdec.exe located
 ```
 
-### Installation (self building)
+### Installation "with self compiling"
 
 ```sh
 # get app-decorators via github
