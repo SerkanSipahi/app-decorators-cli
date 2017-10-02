@@ -42,7 +42,7 @@ appdec run --name=mymodule --watch --server
 
 ### Commands
 
-`appdec create your-app-name`: create a new app
+`appdec create yourapp`: create a new app
 
 `appdec run`: start or build an app
 
