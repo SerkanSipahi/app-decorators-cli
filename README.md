@@ -14,7 +14,8 @@ npm install appdec-cli-win --global
 npm install appdec-cli-linux --global
 
 # then
-appdec create --name=mymodule
+appdec create --name mymodule
+appdec run --name mymodule --watch --server
 ```
 
 ### Installation "with github clone"
