@@ -1,10 +1,13 @@
 {
   "name": "appdec-cli-win",
-  "version": "0.8.249",
+  "version": "0.0.0",
   "description": "app-decorators-cli for Windows",
+  "scripts": {
+    "prepublish": "rm -rf appdec && GOOS=windows GOARCH=amd64 go build ../../*.go"
+  },
   "bin": {
     "appdec": "./appdec.exe"
   },
   "author": "Serkan Sipahi <serkan.sipahi@yahoo.de>",
-  "license": "ISC"
+  "license": "MIT"
 }

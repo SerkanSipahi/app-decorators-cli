@@ -1,10 +1,13 @@
 {
   "name": "appdec-cli-osx",
-  "version": "0.8.249",
+  "version": "0.0.0",
   "description": "app-decorators-cli for Mac OSX",
+  "scripts": {
+    "prepublish": "rm -rf appdec && GOOS=darwin GOARCH=amd64 go build ../../*.go"
+  },
   "bin": {
     "appdec": "./appdec"
   },
   "author": "Serkan Sipahi <serkan.sipahi@yahoo.de>",
-  "license": "ISC"
+  "license": "MIT"
 }
