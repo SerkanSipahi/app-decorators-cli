@@ -1,6 +1,6 @@
 {
   "name": "appdec-cli-linux",
-  "version": "0.0.0",
+  "version": "0.8.250",
   "description": "app-decorators-cli for Linux",
   "scripts": {
     "prepublish": "rm -rf appdec && GOOS=linux GOARCH=amd64 go build ../../*.go"

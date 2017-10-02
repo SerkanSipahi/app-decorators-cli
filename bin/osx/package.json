@@ -1,6 +1,6 @@
 {
   "name": "appdec-cli-osx",
-  "version": "0.0.0",
+  "version": "0.8.250",
   "description": "app-decorators-cli for Mac OSX",
   "scripts": {
     "prepublish": "rm -rf appdec && GOOS=darwin GOARCH=amd64 go build ../../*.go"
