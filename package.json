@@ -7,7 +7,8 @@
     "url": "git+https://github.com/SerkanSipahi/app-decortors-cli.git"
   },
   "scripts": {
-      "deploy": "lerna publish --exact --force-publish=*"
+      "deploy": "lerna publish --exact --force-publish=*",
+      "build": "go build --race *.go"
   },
   "author": "Serkan Sipahi <serkan.sipahi@yahoo.de>",
   "license": "MIT",
