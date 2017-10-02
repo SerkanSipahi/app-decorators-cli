@@ -1,0 +1,10 @@
+{
+  "name": "appdec-cli-linux",
+  "version": "0.8.249",
+  "description": "app-decorators-cli for Linux",
+  "bin": {
+    "appdec": "./appdec"
+  },
+  "author": "Serkan Sipahi <serkan.sipahi@yahoo.de>",
+  "license": "ISC"
+}

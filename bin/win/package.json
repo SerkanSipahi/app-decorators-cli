@@ -1,0 +1,10 @@
+{
+  "name": "appdec-cli-win",
+  "version": "0.8.249",
+  "description": "app-decorators-cli for Windows",
+  "bin": {
+    "appdec": "./appdec.exe"
+  },
+  "author": "Serkan Sipahi <serkan.sipahi@yahoo.de>",
+  "license": "ISC"
+}
