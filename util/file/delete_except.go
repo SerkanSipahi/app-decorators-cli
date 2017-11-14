@@ -10,7 +10,7 @@ import (
 func DeleteExcept(walk string, exceptFile string, ext string) error {
 
 	if exceptFile == "" {
-		log.Fatalln("Please pass tje 'except file'")
+		log.Fatalln("Please pass the 'except file'")
 	}
 
 	var err error = filepath.Walk(walk, func(fullPath string, f os.FileInfo, err error) error {
